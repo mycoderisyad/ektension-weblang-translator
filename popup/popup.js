@@ -402,13 +402,13 @@ function showResult(msg) {
   `;
   
   const title = document.createElement('h3');
-  title.textContent = '🤖 AI Analysis Result';
+  title.textContent = 'AI Analysis Result';
   title.style.cssText = `
     margin: 0; color: #fff; font-size: 16px; font-weight: 600;
   `;
   
   const closeBtn = document.createElement('button');
-  closeBtn.innerHTML = '×';
+  closeBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"></path></svg>`;
   closeBtn.style.cssText = `
     background: none; border: none; color: #999; cursor: pointer;
     font-size: 18px; padding: 4px 8px; border-radius: 4px;

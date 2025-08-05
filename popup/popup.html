@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>WebLang Translator</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <div class="app-header">
+      <div class="app-title">
+        <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M2 12h20"></path>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span>WebLang</span>
+      </div>
+      <div class="mode-status" id="modeIndicator">
+        <div class="status-dot"></div>
+        <span id="modeText">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Scrollable Content -->
+    <div class="app-content">
+      <!-- Translation Section -->
+      <div class="section">
+        <div class="section-header">
+          <svg class="section-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M5 8l6 6"></path>
+            <path d="M4 14l6-6 2-3"></path>
+            <path d="M2 5h12"></path>
+            <path d="M7 2h1"></path>
+            <path d="M22 22l-5-10-5 10"></path>
+            <path d="M14 18h6"></path>
+          </svg>
+          <span>Translation</span>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Mode</label>
+            <select id="mode" class="form-select">
+              <option value="paragraph">Paragraph</option>
+              <option value="fullpage">Full Page</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Source Language</label>
+            <select id="sourceLang" class="form-select">
+              <option value="auto">Auto Detect</option>
+              <option value="id">Indonesian</option>
+              <option value="en">English</option>
+              <option value="ms">Malay</option>
+              <option value="ja">Japanese</option>
+              <option value="zh">Chinese (Simplified)</option>
+              <option value="zh-TW">Chinese (Traditional)</option>
+              <option value="ar">Arabic</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="es">Spanish</option>
+              <option value="ru">Russian</option>
+              <option value="ko">Korean</option>
+              <option value="th">Thai</option>
+              <option value="vi">Vietnamese</option>
+              <option value="hi">Hindi</option>
+              <option value="pt">Portuguese</option>
+              <option value="it">Italian</option>
+              <option value="nl">Dutch</option>
+              <option value="sv">Swedish</option>
+              <option value="no">Norwegian</option>
+              <option value="da">Danish</option>
+              <option value="fi">Finnish</option>
+              <option value="pl">Polish</option>
+              <option value="tr">Turkish</option>
+              <option value="he">Hebrew</option>
+              <option value="cs">Czech</option>
+              <option value="hu">Hungarian</option>
+              <option value="ro">Romanian</option>
+              <option value="bg">Bulgarian</option>
+              <option value="hr">Croatian</option>
+              <option value="sk">Slovak</option>
+              <option value="sl">Slovenian</option>
+              <option value="et">Estonian</option>
+              <option value="lv">Latvian</option>
+              <option value="lt">Lithuanian</option>
+              <option value="uk">Ukrainian</option>
+              <option value="be">Belarusian</option>
+              <option value="is">Icelandic</option>
+              <option value="ga">Irish</option>
+              <option value="mt">Maltese</option>
+              <option value="cy">Welsh</option>
+              <option value="eu">Basque</option>
+              <option value="ca">Catalan</option>
+              <option value="gl">Galician</option>
+              <option value="af">Afrikaans</option>
+              <option value="sw">Swahili</option>
+              <option value="am">Amharic</option>
+              <option value="bn">Bengali</option>
+              <option value="gu">Gujarati</option>
+              <option value="kn">Kannada</option>
+              <option value="ml">Malayalam</option>
+              <option value="mr">Marathi</option>
+              <option value="ne">Nepali</option>
+              <option value="pa">Punjabi</option>
+              <option value="si">Sinhala</option>
+              <option value="ta">Tamil</option>
+              <option value="te">Telugu</option>
+              <option value="ur">Urdu</option>
+              <option value="fa">Persian</option>
+              <option value="ps">Pashto</option>
+              <option value="sd">Sindhi</option>
+              <option value="ky">Kyrgyz</option>
+              <option value="kk">Kazakh</option>
+              <option value="uz">Uzbek</option>
+              <option value="tg">Tajik</option>
+              <option value="mn">Mongolian</option>
+              <option value="my">Myanmar</option>
+              <option value="km">Khmer</option>
+              <option value="lo">Lao</option>
+              <option value="ka">Georgian</option>
+              <option value="hy">Armenian</option>
+              <option value="az">Azerbaijani</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Target Language</label>
+            <select id="targetLang" class="form-select">
+              <option value="id">Indonesian</option>
+              <option value="en">English</option>
+              <option value="ms">Malay</option>
+              <option value="ja">Japanese</option>
+              <option value="zh">Chinese (Simplified)</option>
+              <option value="zh-TW">Chinese (Traditional)</option>
+              <option value="ar">Arabic</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="es">Spanish</option>
+              <option value="ru">Russian</option>
+              <option value="ko">Korean</option>
+              <option value="th">Thai</option>
+              <option value="vi">Vietnamese</option>
+              <option value="hi">Hindi</option>
+              <option value="pt">Portuguese</option>
+              <option value="it">Italian</option>
+              <option value="nl">Dutch</option>
+              <option value="sv">Swedish</option>
+              <option value="no">Norwegian</option>
+              <option value="da">Danish</option>
+              <option value="fi">Finnish</option>
+              <option value="pl">Polish</option>
+              <option value="tr">Turkish</option>
+              <option value="he">Hebrew</option>
+              <option value="cs">Czech</option>
+              <option value="hu">Hungarian</option>
+              <option value="ro">Romanian</option>
+              <option value="bg">Bulgarian</option>
+              <option value="hr">Croatian</option>
+              <option value="sk">Slovak</option>
+              <option value="sl">Slovenian</option>
+              <option value="et">Estonian</option>
+              <option value="lv">Latvian</option>
+              <option value="lt">Lithuanian</option>
+              <option value="uk">Ukrainian</option>
+              <option value="be">Belarusian</option>
+              <option value="is">Icelandic</option>
+              <option value="ga">Irish</option>
+              <option value="mt">Maltese</option>
+              <option value="cy">Welsh</option>
+              <option value="eu">Basque</option>
+              <option value="ca">Catalan</option>
+              <option value="gl">Galician</option>
+              <option value="af">Afrikaans</option>
+              <option value="sw">Swahili</option>
+              <option value="am">Amharic</option>
+              <option value="bn">Bengali</option>
+              <option value="gu">Gujarati</option>
+              <option value="kn">Kannada</option>
+              <option value="ml">Malayalam</option>
+              <option value="mr">Marathi</option>
+              <option value="ne">Nepali</option>
+              <option value="pa">Punjabi</option>
+              <option value="si">Sinhala</option>
+              <option value="ta">Tamil</option>
+              <option value="te">Telugu</option>
+              <option value="ur">Urdu</option>
+              <option value="fa">Persian</option>
+              <option value="ps">Pashto</option>
+              <option value="sd">Sindhi</option>
+              <option value="ky">Kyrgyz</option>
+              <option value="kk">Kazakh</option>
+              <option value="uz">Uzbek</option>
+              <option value="tg">Tajik</option>
+              <option value="mn">Mongolian</option>
+              <option value="my">Myanmar</option>
+              <option value="km">Khmer</option>
+              <option value="lo">Lao</option>
+              <option value="ka">Georgian</option>
+              <option value="hy">Armenian</option>
+              <option value="az">Azerbaijani</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button id="translateBtn" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            Translate
+          </button>
+
+          <button id="cleanupBtn" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+              <path d="M8 6V4c0-1 1-2 2-2h4c0 1 1 2 2 2v2"></path>
+            </svg>
+            Clean
+          </button>
+
+          <button id="restoreBtn" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+            Restore
+          </button>
+        </div>
+
+        <!-- API Monitor -->
+        <div id="apiMonitor" class="api-monitor">
+          <div class="api-status">
+            <span class="api-label">API Used:</span>
+            <span id="currentApi" class="api-name">None</span>
+          </div>
+          <div class="api-details">
+            <span id="apiDetails" class="api-details-text"></span>
+          </div>
+          <button id="viewApiLogs" class="btn-text" style="margin-top: 4px; font-size: 10px;">
+            View Detailed Logs
+          </button>
+        </div>
+      </div>
+
+      <!-- Translation Color Section -->
+      <div class="section">
+        <div class="section-header">
+          <svg class="section-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M4.93 4.93l4.24 4.24"></path>
+            <path d="M14.83 9.17l4.24-4.24"></path>
+            <path d="M14.83 14.83l4.24 4.24"></path>
+            <path d="M9.17 14.83l-4.24 4.24"></path>
+          </svg>
+          <span>Translation Color</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Highlight Color</label>
+          <div class="color-options">
+            <label class="color-option">
+              <input type="radio" name="translationColor" value="default" checked>
+              <span class="color-preview default-color"></span>
+              <span class="color-name">Default</span>
+            </label>
+            <label class="color-option">
+              <input type="radio" name="translationColor" value="red">
+              <span class="color-preview red-color"></span>
+              <span class="color-name">Red</span>
+            </label>
+            <label class="color-option">
+              <input type="radio" name="translationColor" value="blue">
+              <span class="color-preview blue-color"></span>
+              <span class="color-name">Blue</span>
+            </label>
+            <label class="color-option">
+              <input type="radio" name="translationColor" value="green">
+              <span class="color-preview green-color"></span>
+              <span class="color-name">Green</span>
+            </label>
+            <label class="color-option">
+              <input type="radio" name="translationColor" value="yellow">
+              <span class="color-preview yellow-color"></span>
+              <span class="color-name">Yellow</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Features Section -->
+      <div class="section">
+        <div class="section-header">
+          <svg class="section-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+            </path>
+          </svg>
+          <span>AI Analysis</span>
+        </div>
+
+        <div class="ai-buttons">
+          <button id="summarizeBtn" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14,2 14,8 20,8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10,9 9,9 8,9"></polyline>
+            </svg>
+            Summarize
+          </button>
+          <button id="analyzeBtn" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
+            </svg>
+            Analyze
+          </button>
+          <button id="keywordsBtn" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="M21 21l-4.35-4.35"></path>
+            </svg>
+            Keywords
+          </button>
+        </div>
+      </div>
+
+      <!-- Export Section -->
+      <div class="section">
+        <div class="section-header">
+          <svg class="section-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7,10 12,15 17,10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Export</span>
+        </div>
+
+        <!-- Translation Export -->
+        <div class="export-group">
+          <div class="export-label">Translation Export</div>
+          <select id="exportMode" class="form-select small">
+            <option value="bilingual">Original + Translation</option>
+            <option value="translation-only">Translation Only</option>
+          </select>
+          <div class="export-buttons">
+            <button id="exportTransTxtBtn" class="btn-export">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14,2 14,8 20,8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              TXT
+            </button>
+            <button id="exportTransPdfBtn" class="btn-export">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14,2 14,8 20,8"></polyline>
+              </svg>
+              PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Export -->
+        <div class="export-group">
+          <div class="export-label">AI Results Export</div>
+          <div class="export-buttons">
+            <button id="exportTxtBtn" class="btn-export">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14,2 14,8 20,8"></polyline>
+              </svg>
+              TXT
+            </button>
+            <button id="exportPdfBtn" class="btn-export">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14,2 14,8 20,8"></polyline>
+              </svg>
+              PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="app-footer">
+        <div class="footer-left">
+          <button id="openOptions" class="btn-text">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 1v6m0 6v6"></path>
+              <path d="m21 12-6-6v12l6-6z"></path>
+            </svg>
+            Settings
+          </button>
+          <a href="https://saweria.co/RafGT1" target="_blank" class="btn-text donate-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            Donate
+          </a>
+        </div>
+        <div class="status-area">
+          <div id="status" class="status-text"></div>
+          <div id="serviceStatus" class="service-status"></div>
+        </div>
+      </div>
+
+      <!-- Result Area -->
+      <div id="result" class="result-area"></div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>

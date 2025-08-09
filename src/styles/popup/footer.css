@@ -1,0 +1,9 @@
+.app-footer { margin-top: auto; padding: 12px 20px; background: var(--bg-dark); border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.footer-left { display: flex; gap: 8px; align-items: center; }
+.donate-link { color: #e91e63 !important; text-decoration: none; display: flex; align-items: center; padding: 6px 8px; border-radius: 4px; font-size: 11.5px; gap: 4px; background: none; border: none; cursor: pointer; transition: all .2s ease; }
+.donate-link:hover { background: rgba(233,30,99,.1); color: #f06292 !important; }
+.donate-link svg { color: currentColor; }
+.status-area { flex: 1; text-align: right; }
+.status-text { font-size: 11px; color: #999; font-weight: 400; }
+
+

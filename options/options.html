@@ -8,6 +8,15 @@
     <div class="options-wrap">
       <h2>WebLang Settings</h2>
       <form id="apiForm" autocomplete="off">
+        <!-- Quick Translate Toggle -->
+        <div class="section">
+          <h3>Quick Translate</h3>
+          <label class="checkbox-label">
+            <input type="checkbox" id="quickTranslateEnabled" />
+            <strong>Enable Quick Translate (selection popup)</strong>
+          </label>
+          <small>When enabled, selecting text will show a translate popup near the cursor.</small>
+        </div>
         <!-- Mode Translate -->
         <div class="section">
           <h3>Translation Mode</h3>
@@ -282,48 +291,6 @@
                 <option value="hy">Armenian</option>
                 <option value="az">Azerbaijani</option>
               </select>
-            </label>
-          </div>
-        </div>
-
-        <!-- Translation Color Settings -->
-        <div class="section">
-          <h3>Translation Highlight Color</h3>
-          <div class="color-grid">
-            <label class="color-option">
-              <input
-                type="radio"
-                name="translationColor"
-                value="default"
-                checked
-              />
-              <div class="color-preview-large default-color"></div>
-              <span class="color-label">Default</span>
-              <small>Auto</small>
-            </label>
-            <label class="color-option">
-              <input type="radio" name="translationColor" value="red" />
-              <div class="color-preview-large red-color"></div>
-              <span class="color-label">Red</span>
-              <small>Red</small>
-            </label>
-            <label class="color-option">
-              <input type="radio" name="translationColor" value="blue" />
-              <div class="color-preview-large blue-color"></div>
-              <span class="color-label">Blue</span>
-              <small>Blue</small>
-            </label>
-            <label class="color-option">
-              <input type="radio" name="translationColor" value="green" />
-              <div class="color-preview-large green-color"></div>
-              <span class="color-label">Green</span>
-              <small>Green</small>
-            </label>
-            <label class="color-option">
-              <input type="radio" name="translationColor" value="yellow" />
-              <div class="color-preview-large yellow-color"></div>
-              <span class="color-label">Yellow</span>
-              <small>Yellow</small>
             </label>
           </div>
         </div>

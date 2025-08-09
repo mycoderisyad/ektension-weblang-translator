@@ -1,0 +1,5 @@
+.loading { opacity: .5; pointer-events: none; }
+.success { color: var(--accent); background: #1a2e1a; border-color: var(--accent); }
+.error { color: var(--error); background: #2e1a1a; border-color: var(--error); }
+
+

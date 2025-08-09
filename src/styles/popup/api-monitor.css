@@ -1,0 +1,12 @@
+.api-monitor { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); border-radius: 6px; padding: 8px 12px; margin-top: 8px; font-size: 12px; display: none; }
+.api-monitor.show { display: block; animation: fadeInUp .3s ease-out; }
+.api-status { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.api-label { color: #999; font-weight: 500; }
+.api-name { color: #22c55e; font-weight: 600; font-family: monospace; }
+.api-name.google { color: #4285f4; }
+.api-name.azure { color: #0078d4; }
+.api-name.free { color: #f59e0b; }
+.api-details-text { color: #666; font-size: 10px; font-family: monospace; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+
+

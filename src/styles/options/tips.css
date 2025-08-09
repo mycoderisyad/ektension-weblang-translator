@@ -1,0 +1,7 @@
+.tips { font-size:13px; background:#19223c; border:1px solid #233260; border-radius:8px; padding:14px 16px; margin-top:17px; color:#8cb7ff; line-height:1.6; }
+.tip-item { margin-bottom:10px; padding-left:3px; }
+.tip-item:last-child { margin-bottom:0; }
+.tip-item strong { color:#3b82f6; font-weight:600; }
+hr { margin:22px 0 14px 0; border:none; border-top:1px solid var(--border); }
+
+

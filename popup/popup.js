@@ -1,680 +1,408 @@
-// popup/popup.js
-
-window.addEventListener("DOMContentLoaded", function () {
-  // Chrome storage check
-  if (!chrome?.storage) {
-    document.getElementById("modeText").textContent = "Extension Error";
-    return;
+(() => {
+  // src/popup/main.js
+  function sendToContent(msg, timeout = 5e3) {
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        resolve({ success: false, error: "Timeout waiting for content script response" });
+      }, timeout);
+      try {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (chrome.runtime.lastError) {
+            clearTimeout(timer);
+            console.log("Tabs query error:", chrome.runtime.lastError);
+            return resolve({ success: false, error: chrome.runtime.lastError.message });
+          }
+          if (!tabs || !tabs[0]) {
+            clearTimeout(timer);
+            console.log("No active tab found");
+            return resolve({ success: false, error: "No active tab" });
+          }
+          chrome.tabs.sendMessage(tabs[0].id, msg, (resp) => {
+            clearTimeout(timer);
+            if (chrome.runtime.lastError) {
+              console.log("Send message error:", chrome.runtime.lastError);
+              return resolve({ success: false, error: chrome.runtime.lastError.message });
+            }
+            resolve(resp || { success: false, error: "No response" });
+          });
+        });
+      } catch (e) {
+        clearTimeout(timer);
+        console.log("Exception in sendToContent:", e);
+        resolve({ success: false, error: e.message });
+      }
+    });
   }
-
-  chrome.storage.sync.get(
-    ["useFreeMode", "googleKey", "azureKey", "geminiKey", "translationColor"],
-    (data) => {
-      if (chrome.runtime.lastError) {
-        const modeTextEl = document.getElementById("modeText");
-        if (modeTextEl) modeTextEl.textContent = "Storage Error";
+  function sendToBg(msg) {
+    return new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage(msg, (resp) => {
+          if (chrome.runtime.lastError) {
+            console.log("Background message error:", chrome.runtime.lastError);
+            return resolve({ success: false, error: chrome.runtime.lastError.message });
+          }
+          resolve(resp || { success: false, error: "No response" });
+        });
+      } catch (e) {
+        console.log("Exception in sendToBg:", e);
+        resolve({ success: false, error: e.message });
+      }
+    });
+  }
+  function setStatus(text) {
+    const el = document.getElementById("status");
+    if (el) {
+      el.textContent = text || "";
+      console.log("Status updated:", text);
+    }
+  }
+  function updateTranslateButton(isTranslating) {
+    const btn = document.getElementById("translateBtn");
+    if (btn) {
+      if (isTranslating) {
+        btn.textContent = "\u23F9 Stop";
+        btn.classList.add("stop-mode");
+        btn.style.backgroundColor = "#dc3545";
+        btn.style.borderColor = "#dc3545";
+      } else {
+        btn.textContent = "Translate";
+        btn.classList.remove("stop-mode");
+        btn.style.backgroundColor = "";
+        btn.style.borderColor = "";
+      }
+    }
+  }
+  async function checkTranslationStatus() {
+    try {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tabs.length) return;
+      const response = await chrome.tabs.sendMessage(tabs[0].id, {
+        action: "getTranslationStatus"
+      });
+      updateTranslateButton(response && response.isTranslating);
+    } catch (error) {
+      updateTranslateButton(false);
+    }
+  }
+  async function handleAIRequest(aiType, statusMessage) {
+    try {
+      setStatus(statusMessage);
+      const contentData = await sendToContent({ type: "GET_TRANSLATION_DATA" });
+      if (!contentData || !contentData.success || !contentData.data || !contentData.data.translatedTexts.length) {
+        setStatus("No translated content found. Please translate the page first.");
+        setTimeout(() => setStatus(""), 3e3);
         return;
       }
-      const modeIndicator = document.getElementById("modeIndicator");
-      const modeText = document.getElementById("modeText");
-      let modeDescription = "",
-        modeClass = "";
-      if (data.useFreeMode) {
-        modeDescription = "Free Mode Active";
-        modeClass = "mode-status free-mode";
-      } else if (data.googleKey && data.azureKey) {
-        chrome.storage.sync.get(["provider"], (providerData) => {
-          const provider = providerData.provider || "google";
-          if (provider === "azure") {
-            modeText.textContent = "AZURE Priority (Google backup)";
-          } else {
-            modeText.textContent = "GOOGLE Priority (Azure backup)";
-          }
-        });
-        modeClass = "mode-status dual-mode";
-      } else if (data.azureKey) {
-        modeDescription = "AZURE Translator Active";
-        modeClass = "mode-status azure-mode";
-      } else if (data.googleKey) {
-        modeDescription = "GOOGLE Translate Active";
-        modeClass = "mode-status google-mode";
-      } else {
-        modeDescription = "Free Mode (Auto)";
-        modeClass = "mode-status auto-mode";
-      }
-      if (modeDescription) modeText.textContent = modeDescription;
-      modeIndicator.className = modeClass;
-
-      // Load translation color
-      const colorValue = data.translationColor || "default";
-      const colorRadio = document.querySelector(
-        `input[name="translationColor"][value="${colorValue}"]`
-      );
-      if (colorRadio) colorRadio.checked = true;
-    }
-  );
-
-  // Load settings and setup periodic status check
-  loadLanguageSettings();
-  setStatus("Ready");
-
-  // Check translation status every 2 seconds
-  setInterval(() => {
-    sendToContent({ type: "GET_TRANSLATION_STATUS" }, (statusResp) => {
-      if (statusResp && statusResp.isTranslating !== undefined) {
-        updateTranslateButton(statusResp.isTranslating);
-        if (statusResp.isTranslating) {
-          setStatus("Translating... (click to stop)");
-        }
-      }
-    });
-  }, 2000);
-
-  // Translation color
-  document.addEventListener("change", function (e) {
-    if (e.target.name === "translationColor") {
-      const selectedColor = e.target.value;
-      chrome.storage.sync.set({ translationColor: selectedColor }, () => {
-        if (!chrome.runtime.lastError) {
-          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (tabs[0]) {
-              chrome.tabs.sendMessage(tabs[0].id, {
-                action: "updateTranslationColor",
-                color: selectedColor,
-              });
-            }
-          });
-        }
+      const targetLang = document.getElementById("targetLang")?.value || "id";
+      const text = contentData.data.translatedTexts.join("\n\n");
+      const response = await sendToBg({
+        type: aiType,
+        text,
+        targetLang
       });
-    }
-  });
+      if (response && response.success) {
+        const showPopupResponse = await sendToContent({
+          type: "SHOW_AI_POPUP",
+          result: response.result,
+          aiType,
+          targetLang
+        });
+        if (showPopupResponse && showPopupResponse.success) {
+          const actionName = aiType.replace("AI_", "").toLowerCase();
+          setStatus(`${actionName.charAt(0).toUpperCase() + actionName.slice(1)} complete!`);
+        } else {
+          const actionName = aiType.replace("AI_", "").toLowerCase();
+          alert(`${actionName.charAt(0).toUpperCase() + actionName.slice(1)} Result:
 
-  // Listen for service status from background
-  if (chrome.runtime?.onMessage) {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message.action === "translationServiceUsed") {
-        updateAPIMonitor(message);
-        const serviceStatusEl = document.getElementById("serviceStatus");
-        if (serviceStatusEl) {
-          if (message.success) {
-            serviceStatusEl.textContent = `Using: ${message.service}`;
-            serviceStatusEl.className = "service-status success";
-          } else {
-            serviceStatusEl.textContent = `${message.service} failed`;
-            serviceStatusEl.className = "service-status error";
-          }
-          setTimeout(() => {
-            serviceStatusEl.textContent = "";
-            serviceStatusEl.className = "service-status";
-          }, 5000);
+${response.result}`);
+          setStatus(`${actionName.charAt(0).toUpperCase() + actionName.slice(1)} complete!`);
         }
+      } else {
+        setStatus(`AI ${aiType.replace("AI_", "").toLowerCase()} failed: ` + (response?.error || "Unknown error"));
       }
+      setTimeout(() => setStatus(""), 3e3);
+    } catch (error) {
+      setStatus("AI request error: " + error.message);
+      setTimeout(() => setStatus(""), 3e3);
+    }
+  }
+  async function loadPrefsIntoUI() {
+    return new Promise((resolve) => {
+      chrome.storage.sync.get(["sourceLang", "targetLang", "translationMode", "quickTranslateEnabled", "translationColor", "provider", "useFreeMode", "googleKey", "azureKey"], (d) => {
+        try {
+          const s = document.getElementById("sourceLang");
+          if (s) s.value = d.sourceLang || "auto";
+          const t = document.getElementById("targetLang");
+          if (t) t.value = d.targetLang || "id";
+          const m = document.getElementById("mode");
+          if (m) m.value = d.translationMode || "paragraph";
+          const sw = document.getElementById("qtSwitch");
+          if (sw) sw.checked = d.quickTranslateEnabled !== false;
+          const color = d.translationColor || "default";
+          const radio = document.querySelector(`input[name="translationColor"][value="${color}"]`);
+          if (radio) radio.checked = true;
+          updateModeIndicator(d);
+        } catch {
+        }
+        resolve();
+      });
     });
   }
-});
-
-// Helper: send message to content script
-function sendToContent(msg, callback) {
-  if (!chrome?.tabs) return;
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (chrome.runtime.lastError || !tabs?.length) return;
-    const tab = tabs[0];
-    if (
-      !tab.url ||
-      !(tab.url.startsWith("http://") || tab.url.startsWith("https://"))
-    ) {
-      if (callback)
-        callback({
-          success: false,
-          error:
-            "Content script hanya bisa diinject ke halaman web (http/https).",
-        });
-      return;
+  function updateModeIndicator(prefs) {
+    const modeText = document.getElementById("modeText");
+    if (!modeText) return;
+    const provider = prefs.provider || "google";
+    const useFreeMode = prefs.useFreeMode !== false;
+    const hasGoogleKey = !!(prefs.googleKey && prefs.googleKey.trim());
+    const hasAzureKey = !!(prefs.azureKey && prefs.azureKey.trim());
+    let status;
+    if (useFreeMode) {
+      status = "Free Mode";
+    } else if (provider === "google" && hasGoogleKey) {
+      status = "Google Paid";
+    } else if (provider === "azure" && hasAzureKey) {
+      status = "Azure Paid";
+    } else {
+      status = "Free Fallback";
     }
-    chrome.tabs.sendMessage(tab.id, msg, (response) => {
-      if (chrome.runtime.lastError) {
-        const errorMsg = chrome.runtime.lastError.message || "Unknown error";
-        if (errorMsg.includes("Could not establish connection")) {
-          chrome.scripting
-            .executeScript({
-              target: { tabId: tab.id },
-              files: ["content.js"],
-            })
-            .then(() => {
-              setTimeout(() => {
-                chrome.tabs.sendMessage(tab.id, msg, callback);
-              }, 100);
-            })
-            .catch(() => {
-              if (callback)
-                callback({
-                  success: false,
-                  error: "Content script injection failed",
-                });
-            });
+    modeText.textContent = status;
+  }
+  async function ensureContentScript() {
+    try {
+      const testResponse = await sendToContent({ type: "PING" }, 2e3);
+      if (testResponse.success) {
+        console.log("Content script is ready");
+        return true;
+      }
+      console.log("Content script not responding, attempting injection...");
+      const tabs = await new Promise((resolve) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, resolve);
+      });
+      if (tabs && tabs[0]) {
+        await chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          files: ["content.js"]
+        });
+        await new Promise((r) => setTimeout(r, 1e3));
+        const testAgain = await sendToContent({ type: "PING" }, 2e3);
+        if (testAgain.success) {
+          console.log("Content script injected successfully");
+          return true;
+        }
+      }
+      console.log("Failed to ensure content script");
+      return false;
+    } catch (e) {
+      console.log("Error ensuring content script:", e);
+      return false;
+    }
+  }
+  async function init() {
+    console.log("Popup initializing...");
+    await ensureContentScript();
+    await loadPrefsIntoUI();
+    checkTranslationStatus();
+    setInterval(checkTranslationStatus, 500);
+    document.addEventListener("change", (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      const name = target.getAttribute("name");
+      if (name === "translationColor") {
+        const val = (
+          /** @type {HTMLInputElement} */
+          target.value
+        );
+        chrome.storage.sync.set({ translationColor: val }, () => {
+          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs && tabs[0]) chrome.tabs.sendMessage(tabs[0].id, { action: "updateTranslationColor", color: val });
+          });
+        });
+      }
+    });
+    const qt = document.getElementById("qtSwitch");
+    if (qt) qt.addEventListener("change", async (ev) => {
+      const enabled = ev.target.checked;
+      chrome.storage.sync.set({ quickTranslateEnabled: enabled }, async () => {
+        try {
+          const response = await sendToContent({ type: "SET_QUICK_TRANSLATE", enabled });
+          console.log("Quick translate toggle response:", response);
+          if (!response.success) {
+            console.log("Quick translate toggle failed:", response.error);
+          }
+        } catch (e) {
+          console.log("Quick translate toggle error:", e);
+        }
+      });
+    });
+    const btn = document.getElementById("translateBtn");
+    if (btn) btn.addEventListener("click", async () => {
+      try {
+        setStatus("Checking status...");
+        const status = await sendToContent({ type: "GET_TRANSLATION_STATUS" });
+        if (status && status.isTranslating) {
+          setStatus("Stopping translation...");
+          updateTranslateButton(false);
+          await sendToContent({ type: "STOP_TRANSLATION" });
+          setStatus("Translation stopped");
+          setTimeout(() => setStatus(""), 2e3);
           return;
         }
-      }
-      if (callback) callback(response);
-    });
-  });
-}
-// Helper: send message to background
-function sendToBg(msg, callback) {
-  if (!chrome?.runtime) return;
-  chrome.runtime.sendMessage(msg, (response) => {
-    if (chrome.runtime.lastError) {
-      if (callback)
-        callback({
-          success: false,
-          error: chrome.runtime.lastError.message || "Error",
-        });
-      return;
-    }
-    if (callback) callback(response);
-  });
-}
-
-// Translate handler dengan start/stop functionality
-document.getElementById("translateBtn").onclick = () => {
-  // Check if currently translating
-  sendToContent({ type: "GET_TRANSLATION_STATUS" }, (statusResp) => {
-    if (statusResp && statusResp.isTranslating) {
-      // Currently translating - STOP it
-      setStatus("Stopping translation...");
-      sendToContent({ type: "STOP_TRANSLATION" }, (resp) => {
-        setStatus(resp && resp.success ? resp.message : "Translation stopped");
+        const mode = document.getElementById("mode")?.value || "paragraph";
+        const sourceLang = document.getElementById("sourceLang")?.value || "auto";
+        const targetLang = document.getElementById("targetLang")?.value || "id";
+        chrome.storage.sync.set({ sourceLang, targetLang, translationMode: mode });
+        updateTranslateButton(true);
+        setStatus("Starting translation...");
+        const result = await sendToContent({ type: "TRANSLATE_PAGE", mode, sourceLang, targetLang });
         updateTranslateButton(false);
-      });
-    } else {
-      // Not translating - START translation
-      setStatus("Translating...");
-      updateTranslateButton(true);
-
-      const mode = document.getElementById("mode").value;
-      const sourceLang = document.getElementById("sourceLang").value;
-      const targetLang = document.getElementById("targetLang").value;
-
-      chrome.storage.sync.set({
-        sourceLang,
-        targetLang,
-        translationMode: mode,
-      });
-
-      sendToContent(
-        { type: "TRANSLATE_PAGE", mode, sourceLang, targetLang },
-        (resp) => {
-          setStatus(
-            resp && resp.success ? resp.message : "Translation completed"
-          );
-          updateTranslateButton(false);
+        if (result && result.success) {
+          setStatus("Translation complete!");
+          setTimeout(() => setStatus(""), 2e3);
+        } else {
+          setStatus("Translation failed: " + (result?.error || "Unknown error"));
+          setTimeout(() => setStatus(""), 3e3);
         }
-      );
-    }
-  });
-};
-
-// Update translate button text and style
-function updateTranslateButton(isTranslating) {
-  const btn = document.getElementById("translateBtn");
-  if (isTranslating) {
-    btn.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <rect x="6" y="4" width="4" height="16"></rect>
-        <rect x="14" y="4" width="4" height="16"></rect>
-      </svg>
-      Stop Translation
-    `;
-    btn.style.background = "#ef4444";
-    btn.classList.add("translating");
-  } else {
-    btn.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <polyline points="16 18 22 12 16 6"></polyline>
-        <polyline points="8 6 2 12 8 18"></polyline>
-      </svg>
-      Translate
-    `;
-    btn.style.background = "";
-    btn.classList.remove("translating");
-  }
-}
-
-// Cleanup duplicate translations handler
-document.getElementById("cleanupBtn").onclick = () => {
-  setStatus("Cleaning duplicates...");
-  sendToContent({ type: "CLEANUP_DUPLICATES" }, (resp) => {
-    setStatus(
-      resp && resp.success ? "Cleanup completed!" : "Cleanup completed."
-    );
-  });
-};
-
-// Restore original text handler
-document.getElementById("restoreBtn").onclick = () => {
-  setStatus("Restoring original text...");
-  sendToContent({ type: "RESTORE_ORIGINAL" }, (resp) => {
-    setStatus(resp && resp.success ? "Text restored!" : "Restore completed.");
-  });
-};
-// AI
-document.getElementById("summarizeBtn").onclick = () => {
-  setStatus("Summarizing...");
-  sendToContent({ type: "AI_SUMMARIZE" }, (resp) => {
-    showResult(resp?.summary || resp?.error || "[Failed!]");
-    setStatus("");
-  });
-};
-document.getElementById("analyzeBtn").onclick = () => {
-  setStatus("Analyzing...");
-  sendToContent({ type: "ANALYZE_PAGE" }, (resp) => {
-    showResult(resp?.analysis || resp?.error || "[Failed!]");
-    setStatus("");
-  });
-};
-document.getElementById("keywordsBtn").onclick = () => {
-  setStatus("Extracting...");
-  sendToContent({ type: "EXTRACT_KEYWORDS" }, (resp) => {
-    showResult(resp?.keywords || resp?.error || "[Failed!]");
-    setStatus("");
-  });
-};
-// Export AI - hanya TXT dan PDF
-document.getElementById("exportTxtBtn").onclick = () => exportContent("txt");
-document.getElementById("exportPdfBtn").onclick = () => exportContent("pdf");
-// Export translation - hanya TXT dan PDF
-document.getElementById("exportTransTxtBtn").onclick = () =>
-  exportTranslation("txt");
-document.getElementById("exportTransPdfBtn").onclick = () =>
-  exportTranslation("pdf");
-
-// Export translation helper
-function exportTranslation(type) {
-  setStatus("Exporting translation...");
-  const exportMode = document.getElementById("exportMode").value;
-  sendToContent({ type: "GET_TRANSLATION_DATA" }, (response) => {
-    if (!response?.success) {
-      setStatus("Failed to get translation data!");
-      return;
-    }
-    const data = response.data;
-    if (!data?.originalTexts?.length) {
-      setStatus("Please translate the page first!");
-      return;
-    }
-    if (data.originalTexts.length !== data.translatedTexts.length) {
-      setStatus("Translation data mismatch!");
-      return;
-    }
-    let originalTexts = [],
-      translatedTexts = [];
-    if (exportMode === "Original + Translation") {
-      originalTexts = data.originalTexts;
-      translatedTexts = data.translatedTexts;
-    } else if (exportMode === "Translation Only") {
-      translatedTexts = data.translatedTexts;
-    } else {
-      originalTexts = data.originalTexts;
-      translatedTexts = data.translatedTexts;
-    }
-    sendToBg(
-      {
-        type: "EXPORT_TRANSLATION",
-        originalTexts,
-        translatedTexts,
-        sourceLang: data.sourceLang || "en",
-        targetLang: data.targetLang || "id",
-        mode: exportMode,
-        fileType: type,
-      },
-      (resp) => {
-        setStatus(
-          resp && resp.success
-            ? `Translation exported as ${type.toUpperCase()}!`
-            : "Export failed!"
-        );
+      } catch (e) {
+        updateTranslateButton(false);
+        setStatus("Error: " + e.message);
+        setTimeout(() => setStatus(""), 3e3);
       }
-    );
-  });
-}
-// Export helper (AI results)
-function exportContent(fileType) {
-  setStatus("Exporting...");
-  
-  // Use currentAIResult if available, otherwise fallback to result element
-  let content = currentAIResult || (document.getElementById("result")?.textContent) || "";
-  
-  if (!content) {
-    setStatus("No AI results to export");
-    return;
-  }
-  
-  // Export the AI result content directly
-  sendToBg({ type: "EXPORT_CONTENT", content, fileType }, (resp) => {
-    setStatus(resp.success ? "Exported!" : "Export failed!");
-  });
-}
-
-// Open options/settings
-document.getElementById("openOptions").onclick = () => {
-  chrome.runtime.openOptionsPage();
-};
-
-// Status helper with auto-clear
-let lastStatusTimeout;
-function setStatus(msg) {
-  document.getElementById("status").textContent = msg;
-  if (lastStatusTimeout) clearTimeout(lastStatusTimeout);
-  if (msg)
-    lastStatusTimeout = setTimeout(() => {
-      document.getElementById("status").textContent = "";
-    }, 2500);
-}
-// Show AI/result in popup modal
-let currentAIResult = "";
-
-function showResult(msg) {
-  currentAIResult = msg; // Store for export
-  
-  // Create modal overlay
-  const modal = document.createElement('div');
-  modal.className = 'ai-result-modal';
-  modal.style.cssText = `
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.8); z-index: 10000;
-    display: flex; align-items: center; justify-content: center;
-    padding: 20px; opacity: 0; transition: opacity 0.3s;
-  `;
-  
-  // Create modal content
-  const content = document.createElement('div');
-  content.style.cssText = `
-    background: #1a1a1a; border-radius: 12px; padding: 24px;
-    max-width: 500px; max-height: 70vh; overflow-y: auto;
-    border: 1px solid #333; position: relative;
-  `;
-  
-  // Header
-  const header = document.createElement('div');
-  header.style.cssText = `
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #333;
-  `;
-  
-  const title = document.createElement('h3');
-  title.textContent = 'AI Analysis Result';
-  title.style.cssText = `
-    margin: 0; color: #fff; font-size: 16px; font-weight: 600;
-  `;
-  
-  const closeBtn = document.createElement('button');
-  closeBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"></path></svg>`;
-  closeBtn.style.cssText = `
-    background: none; border: none; color: #999; cursor: pointer;
-    font-size: 18px; padding: 4px 8px; border-radius: 4px;
-  `;
-  closeBtn.onmouseover = () => closeBtn.style.background = '#333';
-  closeBtn.onmouseout = () => closeBtn.style.background = 'none';
-  
-  header.appendChild(title);
-  header.appendChild(closeBtn);
-  
-  // Result text
-  const resultText = document.createElement('div');
-  resultText.textContent = msg;
-  resultText.style.cssText = `
-    color: #e5e5e5; line-height: 1.6; font-size: 14px;
-    white-space: pre-wrap; word-break: break-word;
-    margin-bottom: 20px;
-  `;
-  
-  // Export buttons
-  const exportRow = document.createElement('div');
-  exportRow.style.cssText = `
-    display: flex; gap: 8px; justify-content: flex-end;
-    padding-top: 12px; border-top: 1px solid #333;
-  `;
-  
-  // Export buttons - hanya TXT dan PDF
-  ['TXT', 'PDF'].forEach(format => {
-    const btn = document.createElement('button');
-    btn.textContent = format;
-    btn.style.cssText = `
-      background: #2563eb; color: white; border: none;
-      padding: 6px 12px; border-radius: 6px; cursor: pointer;
-      font-size: 12px; font-weight: 500;
-    `;
-    btn.onmouseover = () => btn.style.background = '#1d4ed8';
-    btn.onmouseout = () => btn.style.background = '#2563eb';
-    btn.onclick = () => {
-      exportContent(format.toLowerCase());
-      modal.remove();
-    };
-    exportRow.appendChild(btn);
-  });
-  
-  // Assemble modal
-  content.appendChild(header);
-  content.appendChild(resultText);
-  content.appendChild(exportRow);
-  modal.appendChild(content);
-  document.body.appendChild(modal);
-  
-  // Show with animation
-  setTimeout(() => modal.style.opacity = '1', 10);
-  
-  // Close handlers
-  closeBtn.onclick = () => {
-    modal.style.opacity = '0';
-    setTimeout(() => modal.remove(), 300);
-  };
-  
-  modal.onclick = (e) => {
-    if (e.target === modal) {
-      modal.style.opacity = '0';
-      setTimeout(() => modal.remove(), 300);
+    });
+    const openOpt = document.getElementById("openOptions");
+    if (openOpt) openOpt.addEventListener("click", () => chrome.runtime.openOptionsPage());
+    const summarizeBtn = document.getElementById("summarizeBtn");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const keywordsBtn = document.getElementById("keywordsBtn");
+    if (summarizeBtn) {
+      summarizeBtn.addEventListener("click", async () => {
+        await handleAIRequest("AI_SUMMARIZE", "Summarizing content...");
+      });
     }
-  };
-  
-  // ESC key to close
-  const escHandler = (e) => {
-    if (e.key === 'Escape') {
-      modal.style.opacity = '0';
-      setTimeout(() => modal.remove(), 300);
-      document.removeEventListener('keydown', escHandler);
+    if (analyzeBtn) {
+      analyzeBtn.addEventListener("click", async () => {
+        await handleAIRequest("AI_ANALYZE", "Analyzing content...");
+      });
     }
-  };
-  document.addEventListener('keydown', escHandler);
-}
-
-// Update API Monitor with detailed information
-function updateAPIMonitor(data) {
-  const monitor = document.getElementById("apiMonitor");
-  const apiName = document.getElementById("currentApi");
-  const apiDetails = document.getElementById("apiDetails");
-
-  if (!monitor || !apiName || !apiDetails) return;
-
-  // Show the monitor
-  monitor.classList.add("show");
-
-  // Update API name with appropriate styling and paid indicator
-  let displayName = data.service || "Unknown";
-  if (data.isPaid) {
-    displayName += " (PAID)";
-  } else if (
-    data.service &&
-    !data.service.includes("GOOGLE") &&
-    !data.service.includes("AZURE")
-  ) {
-    displayName += " (FREE)";
-  }
-
-  apiName.textContent = displayName;
-  apiName.className = "api-name";
-
-  if (data.service && data.service.includes("GOOGLE")) {
-    apiName.classList.add("google");
-  } else if (data.service && data.service.includes("AZURE")) {
-    apiName.classList.add("azure");
-  } else {
-    apiName.classList.add("free");
-  }
-
-  // Update details with comprehensive info
-  let details = "";
-  if (data.success) {
-    details = `Success`;
-    if (data.responseTime) {
-      details += ` • ${data.responseTime}ms`;
+    if (keywordsBtn) {
+      keywordsBtn.addEventListener("click", async () => {
+        await handleAIRequest("AI_KEYWORDS", "Extracting keywords...");
+      });
     }
-    if (data.fromLang && data.toLang) {
-      details += ` • ${data.fromLang}→${data.toLang}`;
-    }
-    if (data.textLength) {
-      details += ` • ${data.textLength} chars`;
-    }
-    if (data.timestamp) {
-      details += ` • ${data.timestamp}`;
-    }
-  } else {
-    details = `Failed • ${data.error || "Translation unsuccessful"}`;
-  }
-
-  apiDetails.textContent = details;
-
-  // Auto-hide after 15 seconds for paid APIs, 8 seconds for free
-  const hideDelay = data.isPaid ? 15000 : 8000;
-  setTimeout(() => {
-    monitor.classList.remove("show");
-  }, hideDelay);
-}
-
-// Load saved language settings when popup opens
-function loadLanguageSettings() {
-  chrome.storage.sync.get(
-    ["sourceLang", "targetLang", "translationMode", "defaultSourceLang", "defaultTargetLang"],
-    (data) => {
-      if (chrome.runtime.lastError) return;
-      const sourceLangEl = document.getElementById("sourceLang");
-      const targetLangEl = document.getElementById("targetLang");
-      const modeEl = document.getElementById("mode");
-      
-      // Use current settings or fall back to defaults from options page
-      if (sourceLangEl) {
-        sourceLangEl.value = data.sourceLang || data.defaultSourceLang || "auto";
-      }
-      if (targetLangEl) {
-        targetLangEl.value = data.targetLang || data.defaultTargetLang || "id";
-      }
-      if (modeEl) {
-        modeEl.value = data.translationMode || "paragraph";
-      }
-    }
-  );
-}
-function saveLanguageSettings() {
-  const sourceLang = document.getElementById("sourceLang").value;
-  const targetLang = document.getElementById("targetLang").value;
-  const mode = document.getElementById("mode").value;
-  chrome.storage.sync.set({
-    sourceLang,
-    targetLang,
-    translationMode: mode,
-  });
-}
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(loadLanguageSettings, 100);
-  const sourceLangEl = document.getElementById("sourceLang");
-  const targetLangEl = document.getElementById("targetLang");
-  const modeEl = document.getElementById("mode");
-  if (sourceLangEl)
-    sourceLangEl.addEventListener("change", saveLanguageSettings);
-  if (targetLangEl)
-    targetLangEl.addEventListener("change", saveLanguageSettings);
-  if (modeEl) modeEl.addEventListener("change", saveLanguageSettings);
-
-  // API Logs viewer
-  const viewApiLogsBtn = document.getElementById("viewApiLogs");
-  if (viewApiLogsBtn) {
-    viewApiLogsBtn.onclick = () => {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        chrome.scripting.executeScript({
-          target: { tabId: tabs[0].id },
-          func: showAPILogs,
+    const sourceLangSelect = document.getElementById("sourceLang");
+    const targetLangSelect = document.getElementById("targetLang");
+    const modeSelect = document.getElementById("mode");
+    if (sourceLangSelect) {
+      sourceLangSelect.addEventListener("change", async () => {
+        const sourceLang = sourceLangSelect.value;
+        const targetLang = targetLangSelect?.value || "id";
+        const mode = modeSelect?.value || "paragraph";
+        chrome.storage.sync.set({ sourceLang, targetLang, translationMode: mode }, () => {
+          console.log("Auto-saved source language:", sourceLang);
         });
       });
-    };
-  }
-});
-
-// Function to inject into page for showing API logs
-function showAPILogs() {
-  // Get stored API logs from localStorage
-  const logs = JSON.parse(localStorage.getItem("weblang_api_logs") || "[]");
-
-  if (logs.length === 0) {
-    alert("No API logs found. Try translating some text first.");
-    return;
-  }
-
-  // Create logs display
-  const logsWindow = window.open("", "_blank", "width=800,height=600");
-  logsWindow.document.write(`
-    <html>
-      <head>
-        <title>WebLang API Usage Logs</title>
-        <style>
-          body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #e5e5e5; }
-          .log-entry { margin: 10px 0; padding: 10px; border-left: 3px solid #22c55e; background: #232323; }
-          .log-entry.failed { border-left-color: #ef4444; }
-          .log-timestamp { color: #999; font-size: 12px; }
-          .log-api { color: #4285f4; font-weight: bold; }
-          .log-api.azure { color: #0078d4; }
-          .log-api.free { color: #f59e0b; }
-          .log-details { margin-top: 5px; font-size: 14px; }
-          .clear-btn { background: #ef4444; color: white; border: none; padding: 5px 10px; margin-bottom: 20px; cursor: pointer; }
-        </style>
-      </head>
-      <body>
-        <h2>WebLang API Usage Logs</h2>
-        <button class="clear-btn" onclick="clearLogs()">Clear All Logs</button>
-        <div id="logs">${logs
-          .map(
-            (log) => `
-          <div class="log-entry ${log.success ? "" : "failed"}">
-            <div class="log-timestamp">${log.timestamp}</div>
-            <div class="log-api ${
-              log.service && log.service.includes("GOOGLE")
-                ? "google"
-                : log.service && log.service.includes("AZURE")
-                ? "azure"
-                : "free"
-            }">${log.service}${log.isPaid ? " (PAID)" : " (FREE)"}</div>
-            <div class="log-details">
-              ${log.success ? "[OK]" : "[FAIL]"} ${log.fromLang}→${log.toLang} • ${
-              log.textLength
-            } chars • ${log.responseTime}ms<br>
-              Text: "${log.text.substring(0, 100)}${
-              log.text.length > 100 ? "..." : ""
-            }"<br>
-              Result: "${log.result.substring(0, 100)}${
-              log.result.length > 100 ? "..." : ""
-            }"
-            </div>
-          </div>
-        `
-          )
-          .join("")}</div>
-        <script>
-          function clearLogs() {
-            if (confirm('Clear all API logs?')) {
-              localStorage.removeItem('weblang_api_logs');
-              document.getElementById('logs').innerHTML = '<p>Logs cleared.</p>';
-            }
+    }
+    if (targetLangSelect) {
+      targetLangSelect.addEventListener("change", async () => {
+        const targetLang = targetLangSelect.value;
+        const sourceLang = sourceLangSelect?.value || "auto";
+        const mode = modeSelect?.value || "paragraph";
+        chrome.storage.sync.set({ sourceLang, targetLang, translationMode: mode }, () => {
+          console.log("Auto-saved target language:", targetLang);
+        });
+      });
+    }
+    if (modeSelect) {
+      modeSelect.addEventListener("change", async () => {
+        const mode = modeSelect.value;
+        const sourceLang = sourceLangSelect?.value || "auto";
+        const targetLang = targetLangSelect?.value || "id";
+        chrome.storage.sync.set({ sourceLang, targetLang, translationMode: mode }, () => {
+          console.log("Auto-saved translation mode:", mode);
+        });
+      });
+    }
+    const restoreBtn = document.getElementById("restoreBtn");
+    if (restoreBtn) restoreBtn.addEventListener("click", async () => {
+      setStatus("Restoring original text...");
+      try {
+        const response = await sendToContent({ type: "RESTORE_ORIGINAL" });
+        if (response && response.success) {
+          setStatus("Text restored!");
+          setTimeout(() => setStatus(""), 2e3);
+        } else {
+          setStatus("Restore failed");
+          setTimeout(() => setStatus(""), 2e3);
+        }
+      } catch (e) {
+        setStatus("Restore error");
+        setTimeout(() => setStatus(""), 2e3);
+      }
+    });
+    const exportTransTxtBtn = document.getElementById("exportTransTxtBtn");
+    if (exportTransTxtBtn) exportTransTxtBtn.addEventListener("click", async () => {
+      setStatus("Exporting...");
+      try {
+        const data = await sendToContent({ type: "GET_TRANSLATION_DATA" });
+        if (data && data.success && data.data && data.data.originalTexts.length > 0) {
+          const mode = document.getElementById("exportMode")?.value || "bilingual";
+          const response = await sendToBg({
+            type: "EXPORT_TRANSLATION",
+            fileType: "txt",
+            originalTexts: data.data.originalTexts,
+            translatedTexts: data.data.translatedTexts,
+            mode,
+            sourceLang: data.data.sourceLang,
+            targetLang: data.data.targetLang
+          });
+          if (response && response.success) {
+            setStatus("Export complete!");
+            setTimeout(() => setStatus(""), 2e3);
+          } else {
+            setStatus("Export failed");
+            setTimeout(() => setStatus(""), 2e3);
           }
-        </script>
-      </body>
-    </html>
-  `);
-}
+        } else {
+          setStatus("No translation data found");
+          setTimeout(() => setStatus(""), 2e3);
+        }
+      } catch (e) {
+        setStatus("Export error");
+        setTimeout(() => setStatus(""), 2e3);
+      }
+    });
+    const exportTransPdfBtn = document.getElementById("exportTransPdfBtn");
+    if (exportTransPdfBtn) exportTransPdfBtn.addEventListener("click", async () => {
+      setStatus("Exporting PDF...");
+      try {
+        const data = await sendToContent({ type: "GET_TRANSLATION_DATA" });
+        if (data && data.success && data.data && data.data.originalTexts.length > 0) {
+          const mode = document.getElementById("exportMode")?.value || "bilingual";
+          const response = await sendToBg({
+            type: "EXPORT_TRANSLATION",
+            fileType: "pdf",
+            originalTexts: data.data.originalTexts,
+            translatedTexts: data.data.translatedTexts,
+            mode,
+            sourceLang: data.data.sourceLang,
+            targetLang: data.data.targetLang
+          });
+          if (response && response.success) {
+            setStatus("PDF export complete!");
+            setTimeout(() => setStatus(""), 2e3);
+          } else {
+            setStatus("PDF export failed");
+            setTimeout(() => setStatus(""), 2e3);
+          }
+        } else {
+          setStatus("No translation data found");
+          setTimeout(() => setStatus(""), 2e3);
+        }
+      } catch (e) {
+        setStatus("PDF export error");
+        setTimeout(() => setStatus(""), 2e3);
+      }
+    });
+  }
+  window.addEventListener("DOMContentLoaded", init);
+})();
+//# sourceMappingURL=popup.js.map

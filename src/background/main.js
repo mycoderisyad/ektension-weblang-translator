@@ -1,0 +1,178 @@
+import { StorageUtils } from '../common/storage.js';
+import { RateLimiter } from '../common/rateLimiter.js';
+import { ExportUtils } from './export.js';
+import { UniversalTranslator } from './translator.js';
+import { GeminiAI } from './aiService.js';
+
+console.log('WebLang background script starting...');
+
+// Wire message handlers using modular pieces
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('Background received message:', message.type);
+  
+  (async () => {
+    try {
+      // Check rate limiting only for actual translation requests
+      if ((message.type === 'TRANSLATE_TEXT' || message.type === 'TRANSLATE_BATCH') && RateLimiter.isLimited()) {
+        console.log('Rate limited request');
+        sendResponse({ success: false, error: 'Rate limited! Coba lagi sebentar lagi.' });
+        return;
+      }
+      
+      const apiKeys = await StorageUtils.get(['googleKey', 'azureKey', 'geminiKey', 'provider', 'rateLimit', 'useFreeMode']);
+      const provider = apiKeys.provider || 'google';
+
+      if (message.action === 'testAPI') {
+        // Simple test via provider modules
+        let result = await UniversalTranslator.translate({ 
+          text: 'Hello world', 
+          from: 'en', 
+          to: 'id', 
+          provider, 
+          apiKeys, 
+          useFreeMode: false 
+        });
+        if (result && result.text && result.text !== 'Hello world') {
+          sendResponse({ success: true, result: result.text });
+        } else {
+          sendResponse({ success: false, error: 'API returned empty or unchanged result' });
+        }
+        return;
+      }
+
+      if (message.type === 'TRANSLATE_TEXT') {
+        console.log('Processing TRANSLATE_TEXT request for:', message.text.substring(0, 30));
+        const t = await UniversalTranslator.translate({ 
+          text: message.text, 
+          from: message.from, 
+          to: message.to, 
+          provider, 
+          apiKeys, 
+          useFreeMode: apiKeys.useFreeMode !== false // Default to free mode
+        });
+        if (t && t.text) {
+          console.log('Translation successful:', t.text.substring(0, 50));
+          sendResponse({ success: true, translation: t.text, detectedLang: t.detectedLang });
+        } else {
+          console.log('Translation failed, using fallback');
+          sendResponse({ success: false, error: 'Translation failed', translation: message.text });
+        }
+        return;
+      }
+      
+      if (message.type === 'TRANSLATE_BATCH') {
+        const t = await UniversalTranslator.translate({ 
+          text: message.text, 
+          from: message.from, 
+          to: message.to, 
+          provider, 
+          apiKeys, 
+          useFreeMode: apiKeys.useFreeMode 
+        });
+        if (t && t.text) {
+          sendResponse({ success: true, translations: t.text, detectedLang: t.detectedLang, count: message.count });
+        } else {
+          sendResponse({ success: false, error: 'Batch translation failed', translations: message.text });
+        }
+        return;
+      }
+
+      // AI Analysis Handlers
+      if (message.type === 'AI_SUMMARIZE') {
+        const geminiKey = apiKeys.geminiKey;
+        if (!geminiKey) {
+          sendResponse({ success: false, error: 'Gemini API key not configured' });
+          return;
+        }
+        
+        const result = await GeminiAI.summarize(message.text, geminiKey, message.targetLang || 'id');
+        if (result) {
+          sendResponse({ success: true, result });
+        } else {
+          sendResponse({ success: false, error: 'AI summarization failed' });
+        }
+        return;
+      }
+
+      if (message.type === 'AI_ANALYZE') {
+        const geminiKey = apiKeys.geminiKey;
+        if (!geminiKey) {
+          sendResponse({ success: false, error: 'Gemini API key not configured' });
+          return;
+        }
+        
+        const result = await GeminiAI.analyze(message.text, geminiKey, message.targetLang || 'id');
+        if (result) {
+          sendResponse({ success: true, result });
+        } else {
+          sendResponse({ success: false, error: 'AI analysis failed' });
+        }
+        return;
+      }
+
+      if (message.type === 'AI_KEYWORDS') {
+        const geminiKey = apiKeys.geminiKey;
+        if (!geminiKey) {
+          sendResponse({ success: false, error: 'Gemini API key not configured' });
+          return;
+        }
+        
+        const result = await GeminiAI.keywords(message.text, geminiKey, message.targetLang || 'id');
+        if (result) {
+          sendResponse({ success: true, result });
+        } else {
+          sendResponse({ success: false, error: 'AI keyword extraction failed' });
+        }
+        return;
+      }
+
+      if (message.type === 'EXPORT_AI_PDF') {
+        try {
+          const ok = await ExportUtils.doExport({ 
+            fileType: 'pdf', 
+            content: message.content, 
+            filename: `weblang-ai-result-${Date.now()}`,
+            title: message.title || 'WebLang AI Result'
+          });
+          sendResponse({ success: ok });
+        } catch (e) {
+          console.error('AI PDF export error:', e);
+          sendResponse({ success: false, error: e.message });
+        }
+        return;
+      }
+
+      if (message.type === 'EXPORT_CONTENT') {
+        const ok = await ExportUtils.doExport({ 
+          fileType: message.fileType, 
+          content: message.content, 
+          filename: 'ai-analysis-result' 
+        });
+        sendResponse({ success: ok });
+        return;
+      }
+      
+      if (message.type === 'EXPORT_TRANSLATION') {
+        try {
+          const ok = await ExportUtils.exportTranslation(message);
+          sendResponse({ success: ok });
+        } catch (e) {
+          console.error('Export translation error:', e);
+          sendResponse({ success: false, error: e.message || 'Export failed' });
+        }
+        return;
+      }
+
+      console.log('Unknown message type:', message.type);
+      sendResponse({ success: false, error: 'Unknown request type.' });
+    } catch (e) {
+      console.error('Background script error:', e);
+      sendResponse({ success: false, error: 'Internal error occurred: ' + e.message });
+    }
+  })();
+  return true;
+});
+
+console.log('WebLang background script ready');
+
+

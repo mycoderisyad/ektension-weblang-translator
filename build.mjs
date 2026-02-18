@@ -1,20 +1,33 @@
 import { build, context } from 'esbuild';
-import { mkdir, copyFile } from 'node:fs/promises';
+import { mkdir, copyFile, rm, cp } from 'node:fs/promises';
 
 const isWatch = process.argv.includes('--watch');
 
+async function copyStaticFiles() {
+  await mkdir('build/popup', { recursive: true });
+  await mkdir('build/options', { recursive: true });
+  await mkdir('build/assets', { recursive: true });
+
+  await copyFile('manifest.json', 'build/manifest.json');
+  await copyFile('popup/popup.html', 'build/popup/popup.html');
+  await copyFile('options/options.html', 'build/options/options.html');
+
+  await cp('assets', 'build/assets', { recursive: true, force: true });
+}
+
 async function run() {
-  await mkdir('dist', { recursive: true });
+  await rm('build', { recursive: true, force: true });
   await mkdir('build', { recursive: true });
 
   const config = {
     entryPoints: {
       'background': 'src/background/main.js',
       'content': 'src/content/main.js',
-      'popup': 'src/popup/main.js',
-      'options': 'src/options/main.js',
+      'popup/popup': 'src/popup/main.js',
+      'options/options': 'src/options/main.js',
       'styles/popup/popup': 'src/styles/popup/index.css',
       'styles/options/options': 'src/styles/options/index.css',
+      'styles/content/aiPopup': 'src/styles/content/aiPopup.css',
     },
     outdir: 'build',
     bundle: true,
@@ -30,19 +43,14 @@ async function run() {
 
   if (isWatch) {
     const ctx = await context(config);
+    await copyStaticFiles();
     await ctx.watch();
+    console.log('Watching source files. Load extension from build/ folder.');
   } else {
     await build(config);
+    await copyStaticFiles();
+    console.log('Build complete. Load extension from build/ folder.');
   }
-
-  // Keep manifest pointing to original names by copying bundled files back
-  await copyFile('build/background.js', 'background.js');
-  await copyFile('build/content.js', 'content.js');
-  await copyFile('build/popup.js', 'popup/popup.js');
-  await copyFile('build/options.js', 'options/options.js');
-  await copyFile('build/styles/popup/popup.css', 'popup/popup.css');
-  await copyFile('build/styles/options/options.css', 'options/options.css');
-  console.log('Build complete.');
 }
 
 run().catch((e) => {

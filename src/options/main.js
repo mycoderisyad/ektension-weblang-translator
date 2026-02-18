@@ -1,4 +1,7 @@
-// Recreate runtime options bundle
-import './app.js';
+import { initializeOptionsPage } from './app.js';
+
+window.addEventListener('DOMContentLoaded', () => {
+	initializeOptionsPage();
+});
 
 

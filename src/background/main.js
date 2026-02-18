@@ -6,6 +6,18 @@ import { GeminiAI } from './aiService.js';
 
 console.log('WebLang background script starting...');
 
+const apiLogs = [];
+
+function addApiLog(entry) {
+  apiLogs.unshift({
+    timestamp: new Date().toISOString(),
+    ...entry
+  });
+  if (apiLogs.length > 50) {
+    apiLogs.length = 50;
+  }
+}
+
 // Wire message handlers using modular pieces
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('Background received message:', message.type);
@@ -52,9 +64,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
         if (t && t.text) {
           console.log('Translation successful:', t.text.substring(0, 50));
+          addApiLog({
+            type: 'TRANSLATE_TEXT',
+            provider,
+            success: true,
+            from: message.from,
+            to: message.to
+          });
           sendResponse({ success: true, translation: t.text, detectedLang: t.detectedLang });
         } else {
           console.log('Translation failed, using fallback');
+          addApiLog({
+            type: 'TRANSLATE_TEXT',
+            provider,
+            success: false,
+            from: message.from,
+            to: message.to
+          });
           sendResponse({ success: false, error: 'Translation failed', translation: message.text });
         }
         return;
@@ -70,8 +96,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           useFreeMode: apiKeys.useFreeMode 
         });
         if (t && t.text) {
+          addApiLog({
+            type: 'TRANSLATE_BATCH',
+            provider,
+            success: true,
+            from: message.from,
+            to: message.to,
+            count: message.count
+          });
           sendResponse({ success: true, translations: t.text, detectedLang: t.detectedLang, count: message.count });
         } else {
+          addApiLog({
+            type: 'TRANSLATE_BATCH',
+            provider,
+            success: false,
+            from: message.from,
+            to: message.to,
+            count: message.count
+          });
           sendResponse({ success: false, error: 'Batch translation failed', translations: message.text });
         }
         return;
@@ -87,8 +129,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         
         const result = await GeminiAI.summarize(message.text, geminiKey, message.targetLang || 'id');
         if (result) {
+          addApiLog({ type: 'AI_SUMMARIZE', provider: 'gemini', success: true, targetLang: message.targetLang || 'id' });
           sendResponse({ success: true, result });
         } else {
+          addApiLog({ type: 'AI_SUMMARIZE', provider: 'gemini', success: false, targetLang: message.targetLang || 'id' });
           sendResponse({ success: false, error: 'AI summarization failed' });
         }
         return;
@@ -103,8 +147,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         
         const result = await GeminiAI.analyze(message.text, geminiKey, message.targetLang || 'id');
         if (result) {
+          addApiLog({ type: 'AI_ANALYZE', provider: 'gemini', success: true, targetLang: message.targetLang || 'id' });
           sendResponse({ success: true, result });
         } else {
+          addApiLog({ type: 'AI_ANALYZE', provider: 'gemini', success: false, targetLang: message.targetLang || 'id' });
           sendResponse({ success: false, error: 'AI analysis failed' });
         }
         return;
@@ -119,10 +165,42 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         
         const result = await GeminiAI.keywords(message.text, geminiKey, message.targetLang || 'id');
         if (result) {
+          addApiLog({ type: 'AI_KEYWORDS', provider: 'gemini', success: true, targetLang: message.targetLang || 'id' });
           sendResponse({ success: true, result });
         } else {
+          addApiLog({ type: 'AI_KEYWORDS', provider: 'gemini', success: false, targetLang: message.targetLang || 'id' });
           sendResponse({ success: false, error: 'AI keyword extraction failed' });
         }
+        return;
+      }
+
+      if (message.type === 'INJECT_CONTENT_CSS') {
+        try {
+          const tabId = sender?.tab?.id;
+          if (!tabId || !message.file) {
+            sendResponse({ success: false, error: 'Missing tabId or file' });
+            return;
+          }
+          await chrome.scripting.insertCSS({
+            target: { tabId },
+            files: [message.file]
+          });
+          sendResponse({ success: true });
+        } catch (e) {
+          sendResponse({ success: false, error: e.message });
+        }
+        return;
+      }
+
+      if (message.type === 'GET_API_LOGS') {
+        sendResponse({
+          success: true,
+          logs: apiLogs.slice(0, 10),
+          currentApi: apiLogs[0]?.provider || 'None',
+          details: apiLogs[0]
+            ? `${apiLogs[0].type} (${apiLogs[0].success ? 'success' : 'failed'})`
+            : 'No API request yet'
+        });
         return;
       }
 

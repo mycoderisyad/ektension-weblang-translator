@@ -14,7 +14,7 @@ Installation (Development)
 1. Clone this repository
 2. Run `npm install`
 3. Run `npm run build`
-4. Open Chrome extensions (chrome://extensions), enable Developer mode, and load the `weblang-translator` folder
+4. Open Chrome extensions (chrome://extensions), enable Developer mode, and load the `build` folder
 
 Usage
 - Use the popup to select translation mode and target language
@@ -23,9 +23,11 @@ Usage
 - Export results directly from the popup
 
 Project Structure
-- `src/background/`: translation providers, AI, export logic
-- `src/content/`: UI, DOM utilities, quick translate, main logic
-- `src/styles/`: modular CSS for popup and options
+- `src/background/`: translation providers, AI, export logic, API logging
+- `src/content/`: content runtime, translation engine, quick translate, UI
+- `src/popup/`: modular popup controllers (`translate`, `ai`, `export`, `settings`)
+- `src/options/`: modular options controllers and form helpers
+- `src/styles/`: modular CSS for popup, options, and content AI popup
 - `build/`: compiled output for Chrome extension
 
 Notes

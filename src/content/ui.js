@@ -48,7 +48,9 @@ export const UI = (() => {
     if (!element || !element.parentNode) return;
     const prefs = await getUserPreferences();
     const colorScheme = getColorScheme(prefs.translationColor || 'default');
+    
     if (mode === 'after') {
+      // Mode after: inject translation sebagai element terpisah
       if (element.nextElementSibling?.classList.contains('weblang-translation')) {
         element.nextElementSibling.textContent = translation; return;
       }
@@ -61,14 +63,73 @@ export const UI = (() => {
         element.nextSibling ? parent.insertBefore(div, element.nextSibling) : parent.appendChild(div);
       } catch { element.textContent = translation; }
     } else {
-      if (!element.hasAttribute('data-weblang-original')) element.setAttribute('data-weblang-original', element.textContent);
-      let replaced = false;
-      element.childNodes.forEach((node) => {
-        if (node.nodeType === Node.TEXT_NODE && node.nodeValue?.trim()) {
-          if (!replaced) { node.nodeValue = translation; replaced = true; }
-        }
+      // ⚡ FULL PAGE MODE: HANYA ganti text, TANPA background/highlight seperti Chrome
+      console.log('🔄 Full page: Direct text replacement, no styling');
+      
+      if (!element.hasAttribute('data-weblang-original')) {
+        element.setAttribute('data-weblang-original', element.textContent);
+      }
+      replaceTextPreservingStructure(element, translation);
+    }
+  }
+  
+  // Helper function untuk preserve HTML structure saat replace
+  function replaceTextPreservingStructure(element, translation) {
+    // Check untuk hyperlinks
+    const links = element.querySelectorAll('a[href]');
+    if (links.length > 0) {
+      // Ada hyperlink: preserve link functionality, hanya ganti text
+      links.forEach(link => {
+        const originalHref = link.href;
+        const originalTarget = link.target;
+        const originalRel = link.rel;
+        const originalClass = link.className;
+        
+        // Ganti text content tapi preserve semua attributes
+        link.textContent = translation;
+        link.href = originalHref;
+        if (originalTarget) link.target = originalTarget;
+        if (originalRel) link.rel = originalRel;
+        if (originalClass) link.className = originalClass;
       });
-      if (!replaced) element.textContent = translation;
+    } else {
+      // Tidak ada hyperlink: ganti text nodes saja
+      const walker = document.createTreeWalker(
+        element,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode: (node) => {
+            // Hanya text nodes yang punya content
+            return node.nodeValue?.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+          }
+        },
+        false
+      );
+      
+      const textNodes = [];
+      let node;
+      while (node = walker.nextNode()) {
+        textNodes.push(node);
+      }
+      
+      // Replace text nodes dengan translation
+      if (textNodes.length === 1) {
+        textNodes[0].nodeValue = translation;
+      } else if (textNodes.length > 1) {
+        // Multiple text nodes - distribusi translation
+        const words = translation.split(' ');
+        const wordsPerNode = Math.ceil(words.length / textNodes.length);
+        
+        textNodes.forEach((textNode, index) => {
+          const startIdx = index * wordsPerNode;
+          const endIdx = Math.min(startIdx + wordsPerNode, words.length);
+          const nodeText = words.slice(startIdx, endIdx).join(' ');
+          textNode.nodeValue = nodeText + (endIdx < words.length ? ' ' : '');
+        });
+      } else {
+        // Fallback: replace entire content
+        element.textContent = translation;
+      }
     }
   }
 
@@ -99,7 +160,7 @@ export const UI = (() => {
     setTimeout(() => { el.remove(); }, 3000);
   }
 
-  return { injectTranslation, updateTranslationColor, showProgress, showNotification, getUserPreferences };
+  return { injectTranslation, replaceTextPreservingStructure, updateTranslationColor, showProgress, showNotification, getUserPreferences };
 })();
 
 

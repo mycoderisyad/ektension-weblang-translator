@@ -4,13 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "clean": "node -e \"import('node:fs/promises').then(fs=>fs.rm('build',{recursive:true,force:true}))\"",
     "build": "node build.mjs",
     "watch": "node build.mjs --watch",
     "dev": "node build.mjs --watch"
   },
   "devDependencies": {
-    "esbuild": "^0.21.5"
+    "esbuild": "^0.27.3"
   }
 }
-
-

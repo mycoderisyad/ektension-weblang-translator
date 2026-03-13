@@ -1,12 +1,12 @@
 html,
 body,
 .app-container {
-  min-width: 350px;
-  max-width: 400px;
-  width: 100vw;
-  min-height: 480px;
-  max-height: 600px;
-  height: 540px;
+  width: 100%;
+  min-width: 280px;
+  max-width: 100%;
+  min-height: 100vh;
+  max-height: none;
+  height: auto;
   margin: 0;
   padding: 0;
   overflow: auto;
@@ -33,11 +33,11 @@ body {
   color: var(--text-main);
   margin: 0;
   padding: 0;
-  width: 100vw;
-  max-width: 400px;
-  min-width: 320px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 280px;
   height: 100vh;
-  max-height: 600px;
+  max-height: none;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -45,5 +45,3 @@ body {
 ::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
 ::-webkit-scrollbar-track { background: #232323; border-radius: 2px; }
 *:focus { outline: 1px solid #555; outline-offset: 1px; }
-
-

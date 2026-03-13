@@ -3,6 +3,8 @@ import { TranslationEngine } from './translationEngine.js';
 import { initQuickTranslate, disableQuickTranslate } from './quickTranslate.js';
 import { DomUtils } from './domUtils.js';
 import { AIPopup } from './aiPopup.js';
+import { TTS } from './tts.js';
+import { Tooltip } from './tooltip.js';
 
 // Global guard flags (works in pages and frames)
 const __g = typeof window !== 'undefined' ? window : globalThis;
@@ -144,19 +146,48 @@ if (!__g.__WEBLANG_CS_INIT) {
     
     if (msg.type === 'RESTORE_ORIGINAL') {
       try {
-        // Use the restore function from TranslationEngine
         TranslationEngine.restoreOriginalText();
-        
-        // Reset DOM processing state
         DomUtils.resetProcessedElements();
-        
-        // Re-initialize UI state
         UI.updateTranslationColor();
-        
+        TTS.stop();
+        Tooltip.disable();
         console.log('✅ Restored original text and reset all translation state');
         sendResponse({ success: true, message: 'Original text restored' });
       } catch (e) {
         console.error('Restore error:', e);
+        sendResponse({ success: false, error: e.message });
+      }
+      return;
+    }
+
+    if (msg.type === 'SPEAK_TEXT') {
+      (async () => {
+        try {
+          await TTS.speak(msg.text, msg.lang || 'en');
+          sendResponse({ success: true });
+        } catch (e) {
+          console.error('TTS error:', e);
+          sendResponse({ success: false, error: e.message });
+        }
+      })();
+      return true;
+    }
+
+    if (msg.type === 'STOP_TTS') {
+      TTS.stop();
+      sendResponse({ success: true });
+      return;
+    }
+
+    if (msg.type === 'SET_TOOLTIP_MODE') {
+      try {
+        if (msg.enabled) {
+          Tooltip.enable();
+        } else {
+          Tooltip.disable();
+        }
+        sendResponse({ success: true });
+      } catch (e) {
         sendResponse({ success: false, error: e.message });
       }
       return;

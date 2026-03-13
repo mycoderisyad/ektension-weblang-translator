@@ -1,4 +1,5 @@
 import { UI } from './ui.js';
+import { TTS } from './tts.js';
 
 // Helper function to check if extension context is valid
 function isExtensionContextValid() {
@@ -87,7 +88,8 @@ export function initQuickTranslate() {
       </div>
       <div style="padding:14px">
         <div class="weblang-quick-content" style="white-space:pre-wrap;word-break:break-word;margin-bottom:12px;color:#e5e7eb;font-size:14px;line-height:1.5">${text}</div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
+        <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center">
+          <button data-action="speak" title="Text-to-Speech" style="background:none;color:#e5e7eb;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:16px;line-height:1">🔊</button>
           <button data-action="copy" style="background:none;color:#e5e7eb;border:none;padding:0 6px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500">Copy</button>
         </div>
       </div>
@@ -351,13 +353,27 @@ export function initQuickTranslate() {
         if (!(target instanceof HTMLElement)) return;
         const action = target.getAttribute('data-action');
         if (action === 'close') { 
+          TTS.stop();
           removeUI(); 
           return; 
+        }
+        if (action === 'speak') {
+          try {
+            if (TTS.isSpeaking()) {
+              TTS.stop();
+              target.textContent = '🔊';
+            } else {
+              target.textContent = '⏹️';
+              await TTS.speak(contentNode.textContent || '', targetLang);
+              target.textContent = '🔊';
+            }
+          } catch {
+            target.textContent = '🔊';
+          }
         }
         if (action === 'copy') {
           try { 
             await navigator.clipboard.writeText(contentNode.textContent || ''); 
-            // Check context before calling UI functions
             if (isExtensionContextValid()) {
               UI.showNotification('Copied to clipboard', 'success'); 
             }

@@ -44,6 +44,72 @@ export const TranslateProvider = (() => {
     return null;
   }
 
+  // Batch Google Translate — sends multiple texts in one request (like XTranslate's translateMany)
+  // Uses /translate_a/t endpoint with multiple 'q' parameters via POST
+  async function googleFreeBatch(texts, from, to) {
+    const endpoints = [
+      'https://translate.googleapis.com/translate_a/t',
+      'https://clients5.google.com/translate_a/t',
+    ];
+    
+    for (const endpoint of endpoints) {
+      try {
+        const queryParams = new URLSearchParams({
+          client: 'gtx',
+          sl: from === 'auto' ? 'auto' : from,
+          tl: to,
+        });
+        
+        const bodyParams = new URLSearchParams(
+          texts.map(text => ['q', text])
+        );
+        
+        const url = `${endpoint}?${queryParams.toString()}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Mozilla/5.0',
+            'Accept': '*/*',
+          },
+          body: bodyParams.toString(),
+        });
+        
+        if (!res.ok) continue;
+        const data = await res.json();
+        
+        let translations = [];
+        if (from === 'auto') {
+          // Response format: [[text, locale], ...]
+          if (Array.isArray(data)) {
+            translations = data.map(item => {
+              if (Array.isArray(item)) return item[0];
+              if (typeof item === 'string') return item;
+              return null;
+            });
+          }
+        } else {
+          // Response format: [text, ...]
+          if (Array.isArray(data)) {
+            translations = data.map(item => {
+              if (typeof item === 'string') return item;
+              if (Array.isArray(item)) return item[0];
+              return null;
+            });
+          }
+        }
+        
+        if (translations.length > 0 && translations.some(t => t)) {
+          return translations;
+        }
+      } catch (err) {
+        console.error('[Providers] Batch translate error:', err);
+        continue;
+      }
+    }
+    return null;
+  }
+
   async function azure(text, from, to, key, region = 'southeastasia') {
     try {
       let query = `https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=${to}`;
@@ -100,7 +166,7 @@ export const TranslateProvider = (() => {
     }
   }
 
-  return { googlePaid, googleFree, azure, myMemory, libre };
+  return { googlePaid, googleFree, googleFreeBatch, azure, myMemory, libre };
 })();
 
 

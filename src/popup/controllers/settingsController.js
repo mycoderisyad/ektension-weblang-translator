@@ -34,6 +34,7 @@ export function createSettingsController({ sendToContent, sendToBackground, ensu
       'targetLang',
       'translationMode',
       'quickTranslateEnabled',
+      'showOriginalOnHover',
       'translationColor',
       'provider',
       'useFreeMode',
@@ -50,6 +51,9 @@ export function createSettingsController({ sendToContent, sendToBackground, ensu
     if (target) target.value = prefs.targetLang || 'id';
     if (mode) mode.value = prefs.translationMode || 'paragraph';
     if (qtSwitch) qtSwitch.checked = prefs.quickTranslateEnabled !== false;
+
+    const tooltipSwitch = document.getElementById('tooltipSwitch');
+    if (tooltipSwitch) tooltipSwitch.checked = prefs.showOriginalOnHover !== false;
 
     const color = prefs.translationColor || 'default';
     const colorRadio = document.querySelector(`input[name="translationColor"][value="${color}"]`);
@@ -119,6 +123,15 @@ export function createSettingsController({ sendToContent, sendToBackground, ensu
         const enabled = qtSwitch.checked;
         await StorageUtils.set({ quickTranslateEnabled: enabled });
         await sendToContent({ type: 'SET_QUICK_TRANSLATE', enabled });
+      });
+    }
+
+    const tooltipSwitch = document.getElementById('tooltipSwitch');
+    if (tooltipSwitch) {
+      tooltipSwitch.addEventListener('change', async () => {
+        const enabled = tooltipSwitch.checked;
+        await StorageUtils.set({ showOriginalOnHover: enabled });
+        await sendToContent({ type: 'SET_TOOLTIP_MODE', enabled });
       });
     }
 

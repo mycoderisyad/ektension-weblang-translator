@@ -6,6 +6,11 @@ import { GeminiAI } from './aiService.js';
 
 console.log('WebLang background script starting...');
 
+// Open side panel when clicking the extension icon
+chrome.action.onClicked.addListener(async (tab) => {
+  await chrome.sidePanel.open({ tabId: tab.id });
+});
+
 const apiLogs = [];
 
 function addApiLog(entry) {
@@ -87,34 +92,45 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       
       if (message.type === 'TRANSLATE_BATCH') {
-        const t = await UniversalTranslator.translate({ 
-          text: message.text, 
-          from: message.from, 
-          to: message.to, 
-          provider, 
-          apiKeys, 
-          useFreeMode: apiKeys.useFreeMode 
-        });
-        if (t && t.text) {
-          addApiLog({
-            type: 'TRANSLATE_BATCH',
-            provider,
-            success: true,
+        try {
+          // Split joined texts back into array
+          const SEPARATOR = '\n\u200B\n';
+          const texts = message.text.split(SEPARATOR);
+          
+          const results = await UniversalTranslator.translateBatch({
+            texts,
             from: message.from,
             to: message.to,
-            count: message.count
-          });
-          sendResponse({ success: true, translations: t.text, detectedLang: t.detectedLang, count: message.count });
-        } else {
-          addApiLog({
-            type: 'TRANSLATE_BATCH',
             provider,
-            success: false,
-            from: message.from,
-            to: message.to,
-            count: message.count
+            apiKeys,
+            useFreeMode: apiKeys.useFreeMode !== false
           });
-          sendResponse({ success: false, error: 'Batch translation failed', translations: message.text });
+          
+          if (results && results.length > 0) {
+            addApiLog({
+              type: 'TRANSLATE_BATCH',
+              provider,
+              success: true,
+              from: message.from,
+              to: message.to,
+              count: texts.length
+            });
+            // Join back with same separator
+            sendResponse({ success: true, translations: results.join(SEPARATOR), detectedLang: 'auto', count: texts.length });
+          } else {
+            addApiLog({
+              type: 'TRANSLATE_BATCH',
+              provider,
+              success: false,
+              from: message.from,
+              to: message.to,
+              count: texts.length
+            });
+            sendResponse({ success: false, error: 'Batch translation failed', translations: message.text });
+          }
+        } catch (err) {
+          console.error('Batch translation error:', err);
+          sendResponse({ success: false, error: err.message, translations: message.text });
         }
         return;
       }

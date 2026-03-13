@@ -40,7 +40,39 @@ export const UniversalTranslator = (() => {
     }
     return { text, detectedLang: from, usedService: 'FAILED' };
   }
-  return { translate };
+
+  // Batch translate function — uses Google's batch endpoint for faster multi-text translation
+  async function translateBatch({ texts, from = 'auto', to = 'id', provider, apiKeys, useFreeMode }) {
+    if (!texts || !Array.isArray(texts) || texts.length === 0) {
+      return [];
+    }
+
+    // Try batch API first (Google free batch)
+    if (useFreeMode || !apiKeys?.googleKey) {
+      try {
+        const batchResult = await TranslateProvider.googleFreeBatch(texts, from, to);
+        if (batchResult && Array.isArray(batchResult) && batchResult.length === texts.length) {
+          console.log(`[Translator] Batch translated ${texts.length} texts successfully`);
+          return batchResult;
+        }
+      } catch (err) {
+        console.error('[Translator] Batch API failed, falling back to sequential:', err);
+      }
+    }
+
+    // Fallback: translate one by one
+    console.log(`[Translator] Falling back to sequential for ${texts.length} texts`);
+    const results = [];
+    for (const text of texts) {
+      try {
+        const result = await translate({ text, from, to, provider, apiKeys, useFreeMode });
+        results.push(result?.text || text);
+      } catch {
+        results.push(text); // Return original on failure
+      }
+    }
+    return results;
+  }
+
+  return { translate, translateBatch };
 })();
-
-

@@ -1,6 +1,7 @@
 import { getActiveTab, sendToBackground, sendToContent } from './utils/messaging.js';
 import { createTranslateController } from './controllers/translateController.js';
 import { createAiController } from './controllers/aiController.js';
+import { initializeOptionsPage } from '../options/app.js';
 import { createExportController } from './controllers/exportController.js';
 import { createSettingsController } from './controllers/settingsController.js';
 
@@ -48,6 +49,9 @@ async function initPopup() {
   const ai = createAiController(services);
   const exportController = createExportController(services);
   const settings = createSettingsController(services);
+
+  // Initialize the embedded options page functionality
+  await initializeOptionsPage();
 
   await settings.bind();
   translate.bind();

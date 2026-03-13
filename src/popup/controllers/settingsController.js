@@ -104,7 +104,24 @@ export function createSettingsController({ sendToContent, sendToBackground, ensu
     await loadPrefsIntoUI();
     await refreshApiMonitor();
 
-    document.getElementById('openOptions')?.addEventListener('click', () => chrome.runtime.openOptionsPage());
+    const mainView = document.getElementById('mainView');
+    const settingsView = document.getElementById('settingsView');
+    const openOptionsBtn = document.getElementById('openOptions');
+    const backToMainBtn = document.getElementById('backToMain');
+
+    if (openOptionsBtn && mainView && settingsView) {
+      openOptionsBtn.addEventListener('click', () => {
+        mainView.style.display = 'none';
+        settingsView.style.display = 'block';
+      });
+    }
+
+    if (backToMainBtn && mainView && settingsView) {
+      backToMainBtn.addEventListener('click', () => {
+        settingsView.style.display = 'none';
+        mainView.style.display = 'block';
+      });
+    }
 
     document.addEventListener('change', async (event) => {
       const target = event.target;

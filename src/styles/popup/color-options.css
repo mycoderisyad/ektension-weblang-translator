@@ -1,15 +1,58 @@
-.color-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
-.color-option { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: 1px solid #555; border-radius: 6px; cursor: pointer; background: #222; transition: border-color var(--transition), background var(--transition); user-select: none; }
-.color-option:hover { border-color: #666; background: #292929; }
-.color-option input[type="radio"] { display: none; }
-.color-option input[type="radio"]:checked + .color-preview { border: 2px solid #888; }
-.color-option input[type="radio"]:checked ~ .color-name { color: #fff; font-weight: 600; }
-.color-preview { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #666; display: inline-block; }
-.color-name { font-size: 11.7px; font-weight: 600; color: var(--text-secondary); }
+/* Color options in a single horizontal row of circles */
+.color-options { 
+  display: flex; 
+  align-items: center; 
+  justify-content: flex-start; /* or space-between if it needs to stretch */
+  gap: 12px; 
+  margin-top: 8px; 
+}
+
+.color-option { 
+  cursor: pointer; 
+  position: relative; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  width: 28px; 
+  height: 28px; 
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option input[type="radio"] { 
+  position: absolute; 
+  opacity: 0; 
+  width: 0;
+  height: 0;
+}
+
+.color-preview { 
+  width: 24px; 
+  height: 24px; 
+  border-radius: 50%; 
+  border: 2px solid transparent; 
+  transition: all 0.2s; 
+}
+
+.color-option input:focus-visible ~ .color-preview { 
+  outline: 2px solid var(--accent); 
+  outline-offset: 2px; 
+}
+
+/* Color States */
+.color-option input:checked ~ .default-color { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 8px rgba(255,255,255,0.4); }
+.color-option input:checked ~ .red-color { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 8px rgba(255,82,82,0.6); }
+.color-option input:checked ~ .blue-color { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 8px rgba(68,138,255,0.6); }
+.color-option input:checked ~ .green-color { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 8px rgba(76,175,80,0.6); }
+.color-option input:checked ~ .yellow-color { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 8px rgba(255,171,64,0.6); }
+
+/* Base Colors */
 .default-color { background: #666; }
 .red-color { background: #ef4444; }
 .blue-color { background: #3b82f6; }
 .green-color { background: #10b981; }
 .yellow-color { background: #f59e0b; }
-
-

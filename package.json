@@ -1,6 +1,8 @@
 {
   "name": "weblang-translator",
   "version": "2.0.0",
+  "description": "Translate any web page instantly with multi-provider support and AI-powered analysis.",
+  "author": "mycoderisyad",
   "private": true,
   "type": "module",
   "scripts": {

@@ -30,7 +30,6 @@ if (!__g.__WEBLANG_CS_INIT) {
           const onProgress = (current, total, message) => {
             console.log(`Progress: ${current}/${total} - ${message}`);
           };
-          
           if (msg.mode === 'paragraph') {
             result = await TranslationEngine.translateParagraphMode(
               msg.sourceLang || 'auto', 

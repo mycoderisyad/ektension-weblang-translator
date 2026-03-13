@@ -18,6 +18,7 @@ export function createApiSettingsController({ message }) {
   const googleKeyInput = document.getElementById('googleKey');
   const azureKeyInput = document.getElementById('azureKey');
   const geminiKeyInput = document.getElementById('geminiKey');
+  const geminiModelInput = document.getElementById('geminiModel');
   const providerSelect = document.getElementById('provider');
   const useFreeMode = document.getElementById('useFreeMode');
   const quickTranslateEnabled = document.getElementById('quickTranslateEnabled');
@@ -56,6 +57,7 @@ export function createApiSettingsController({ message }) {
     if (googleKeyInput) googleKeyInput.value = settings.googleKey || '';
     if (azureKeyInput) azureKeyInput.value = settings.azureKey || '';
     if (geminiKeyInput) geminiKeyInput.value = settings.geminiKey || '';
+    if (geminiModelInput) geminiModelInput.value = settings.geminiModel || '';
     if (providerSelect) providerSelect.value = settings.provider || 'google';
     if (useFreeMode) useFreeMode.checked = !!settings.useFreeMode;
     if (quickTranslateEnabled) quickTranslateEnabled.checked = settings.quickTranslateEnabled !== false;
@@ -67,6 +69,7 @@ export function createApiSettingsController({ message }) {
       googleKey: googleKeyInput?.value.trim() || '',
       azureKey: azureKeyInput?.value.trim() || '',
       geminiKey: geminiKeyInput?.value.trim() || '',
+      geminiModel: geminiModelInput?.value.trim() || '',
       provider: providerSelect?.value || 'google',
       useFreeMode: !!useFreeMode?.checked,
       quickTranslateEnabled: quickTranslateEnabled?.checked !== false

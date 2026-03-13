@@ -32,11 +32,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // Check rate limiting only for actual translation requests
       if ((message.type === 'TRANSLATE_TEXT' || message.type === 'TRANSLATE_BATCH') && RateLimiter.isLimited()) {
         console.log('Rate limited request');
-        sendResponse({ success: false, error: 'Rate limited! Coba lagi sebentar lagi.' });
+        sendResponse({ success: false, error: 'Rate limited! Please try again shortly.' });
         return;
       }
       
-      const apiKeys = await StorageUtils.get(['googleKey', 'azureKey', 'geminiKey', 'provider', 'rateLimit', 'useFreeMode']);
+      const apiKeys = await StorageUtils.get(['googleKey', 'azureKey', 'geminiKey', 'geminiModel', 'provider', 'rateLimit', 'useFreeMode']);
       const provider = apiKeys.provider || 'google';
 
       if (message.action === 'testAPI') {
@@ -138,12 +138,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // AI Analysis Handlers
       if (message.type === 'AI_SUMMARIZE') {
         const geminiKey = apiKeys.geminiKey;
+        const geminiModel = apiKeys.geminiModel;
         if (!geminiKey) {
           sendResponse({ success: false, error: 'Gemini API key not configured' });
           return;
         }
         
-        const result = await GeminiAI.summarize(message.text, geminiKey, message.targetLang || 'id');
+        const result = await GeminiAI.summarize(message.text, geminiKey, message.targetLang || 'id', geminiModel);
         if (result) {
           addApiLog({ type: 'AI_SUMMARIZE', provider: 'gemini', success: true, targetLang: message.targetLang || 'id' });
           sendResponse({ success: true, result });
@@ -156,12 +157,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       if (message.type === 'AI_ANALYZE') {
         const geminiKey = apiKeys.geminiKey;
+        const geminiModel = apiKeys.geminiModel;
         if (!geminiKey) {
           sendResponse({ success: false, error: 'Gemini API key not configured' });
           return;
         }
         
-        const result = await GeminiAI.analyze(message.text, geminiKey, message.targetLang || 'id');
+        const result = await GeminiAI.analyze(message.text, geminiKey, message.targetLang || 'id', geminiModel);
         if (result) {
           addApiLog({ type: 'AI_ANALYZE', provider: 'gemini', success: true, targetLang: message.targetLang || 'id' });
           sendResponse({ success: true, result });
@@ -174,12 +176,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       if (message.type === 'AI_KEYWORDS') {
         const geminiKey = apiKeys.geminiKey;
+        const geminiModel = apiKeys.geminiModel;
         if (!geminiKey) {
           sendResponse({ success: false, error: 'Gemini API key not configured' });
           return;
         }
         
-        const result = await GeminiAI.keywords(message.text, geminiKey, message.targetLang || 'id');
+        const result = await GeminiAI.keywords(message.text, geminiKey, message.targetLang || 'id', geminiModel);
         if (result) {
           addApiLog({ type: 'AI_KEYWORDS', provider: 'gemini', success: true, targetLang: message.targetLang || 'id' });
           sendResponse({ success: true, result });

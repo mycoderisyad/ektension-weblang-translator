@@ -464,14 +464,14 @@
             <h3>Translation Mode</h3>
             <label class="checkbox-label">
               <input type="checkbox" id="useFreeMode" />
-              <strong>Gunakan Mode Gratis</strong> (Google Translate Free + MyMemory)
+              <strong>Use Free Mode</strong>
             </label>
-            <small>Mode gratis tidak memerlukan API key, cocok untuk penggunaan ringan</small>
+            <small>Free mode doesn't require an API key, suitable for light usage</small>
           </div>
 
-          <!-- API Keys (hanya tampil jika mode berbayar) -->
+          <!-- API Keys (only shown in paid mode) -->
           <div class="section" id="apiSection">
-            <h3>API Keys (Mode Berbayar)</h3>
+            <h3>API Keys (Paid Mode)</h3>
             <label>Google Translate API Key
               <div class="input-with-toggle">
                 <input type="password" id="googleKey" placeholder="API Key (optional)" />
@@ -500,7 +500,7 @@
 
             <label>Gemini AI API Key
               <div class="input-with-toggle">
-                <input type="password" id="geminiKey" placeholder="API Key (untuk AI features)" />
+                <input type="password" id="geminiKey" placeholder="API Key (for AI features)" />
                 <button type="button" class="toggle-password" data-target="geminiKey" aria-label="Show/Hide API Key">
                   <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -508,6 +508,11 @@
                   </svg>
                 </button>
               </div>
+            </label>
+
+            <label>Gemini AI Model
+              <input type="text" id="geminiModel" placeholder="gemini-2.0-flash (default)" />
+              <small style="color:#888; font-size:11px;">e.g. gemini-2.5-flash, gemini-2.0-flash-lite, gemini-1.5-pro</small>
             </label>
 
             <label>Translation Provider Priority
@@ -543,11 +548,11 @@
         </form>
         <hr />
         <div class="tips">
-          <b>Tips Penggunaan:</b><br />
-          <div class="tip-item"><strong>Mode Gratis:</strong> Ideal untuk penggunaan sehari-hari, tidak ada batasan biaya</div>
-          <div class="tip-item"><strong>Mode Berbayar:</strong> Hasil lebih akurat, lebih cepat, dan mendukung lebih banyak bahasa</div>
-          <div class="tip-item"><strong>Gemini API:</strong> Gratis untuk AI features (summarize, analyze, keywords)</div>
-          <div class="tip-item"><strong>Auto Fallback:</strong> Jika API berbayar gagal, otomatis pakai mode gratis</div>
+          <b>Usage Tips:</b><br />
+          <div class="tip-item"><strong>Free Mode:</strong> Ideal for daily use, no cost limits</div>
+          <div class="tip-item"><strong>Paid Mode:</strong> More accurate, faster results, and supports more languages</div>
+          <div class="tip-item"><strong>Gemini API:</strong> Free for AI features (summarize, analyze, keywords)</div>
+          <div class="tip-item"><strong>Auto Fallback:</strong> If paid API fails, automatically falls back to free mode</div>
         </div>
       </div>
     </div>

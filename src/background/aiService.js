@@ -113,10 +113,11 @@ const GeminiAI = (() => {
     return langMap[code] || 'English';
   };
 
-  async function makeRequest(prompt, key) {
+  async function makeRequest(prompt, key, model) {
+    const modelName = model || 'gemini-2.0-flash';
     try {
       const res = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
         {
           method: "POST",
           headers: { 
@@ -150,22 +151,22 @@ const GeminiAI = (() => {
     }
   }
 
-  async function summarize(text, key, targetLang = 'id') {
+  async function summarize(text, key, targetLang = 'id', model) {
     const langName = getLanguageName(targetLang);
     const prompt = `Create a brief and easy-to-understand summary of the following text in ${langName}:\n\n${text}`;
-    return await makeRequest(prompt, key);
+    return await makeRequest(prompt, key, model);
   }
   
-  async function analyze(text, key, targetLang = 'id') {
+  async function analyze(text, key, targetLang = 'id', model) {
     const langName = getLanguageName(targetLang);
     const prompt = `Analyze the following text in ${langName}. Provide results including: sentiment, readability level, and main themes.\n\nText:\n${text}`;
-    return await makeRequest(prompt, key);
+    return await makeRequest(prompt, key, model);
   }
   
-  async function keywords(text, key, targetLang = 'id') {
+  async function keywords(text, key, targetLang = 'id', model) {
     const langName = getLanguageName(targetLang);
     const prompt = `From the following text, extract 10 most important keywords in ${langName} (only words/phrases, separated by commas):\n\n${text}`;
-    return await makeRequest(prompt, key);
+    return await makeRequest(prompt, key, model);
   }
   
   return { summarize, analyze, keywords };

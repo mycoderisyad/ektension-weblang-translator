@@ -114,7 +114,7 @@ const GeminiAI = (() => {
   };
 
   async function makeRequest(prompt, key, model) {
-    const modelName = model || 'gemini-2.0-flash';
+    const modelName = model || 'gemini-2.5-flash-lite';
     try {
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,

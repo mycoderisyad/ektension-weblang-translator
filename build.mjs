@@ -9,8 +9,9 @@ async function copyStaticFiles() {
   await mkdir('build/assets', { recursive: true });
 
   await copyFile('manifest.json', 'build/manifest.json');
-  await copyFile('popup/popup.html', 'build/popup/popup.html');
-  await copyFile('options/options.html', 'build/options/options.html');
+  // HTML files now live in src/ — copy from there
+  await copyFile('src/popup/popup.html', 'build/popup/popup.html');
+  await copyFile('src/options/options.html', 'build/options/options.html');
 
   await cp('assets', 'build/assets', { recursive: true, force: true });
 }
@@ -25,8 +26,8 @@ async function run() {
       'content': 'src/content/main.js',
       'popup/popup': 'src/popup/main.js',
       'options/options': 'src/options/main.js',
-      'styles/popup/popup': 'src/styles/popup/index.css',
-      'styles/options/options': 'src/styles/options/index.css',
+      'styles/popup/popup': 'src/styles/popup/popup.css',
+      'styles/options/options': 'src/styles/options/options.css',
       'styles/content/aiPopup': 'src/styles/content/aiPopup.css',
     },
     outdir: 'build',

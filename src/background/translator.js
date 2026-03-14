@@ -52,7 +52,6 @@ export const UniversalTranslator = (() => {
       try {
         const batchResult = await TranslateProvider.googleFreeBatch(texts, from, to);
         if (batchResult && Array.isArray(batchResult) && batchResult.length === texts.length) {
-          console.log(`[Translator] Batch translated ${texts.length} texts successfully`);
           return batchResult;
         }
       } catch (err) {
@@ -61,7 +60,6 @@ export const UniversalTranslator = (() => {
     }
 
     // Fallback: translate one by one
-    console.log(`[Translator] Falling back to sequential for ${texts.length} texts`);
     const results = [];
     for (const text of texts) {
       try {

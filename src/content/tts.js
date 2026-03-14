@@ -125,7 +125,7 @@ export const TTS = (() => {
       // Try Google TTS first (better quality)
       await playGoogleTTS(text, lang);
     } catch (err) {
-      console.log('[TTS] Google TTS failed, falling back to SpeechSynthesis:', err);
+      console.warn('[TTS] Google TTS failed, falling back to SpeechSynthesis:', err);
       try {
         await speakSynthesis(text, lang);
       } catch (synthErr) {

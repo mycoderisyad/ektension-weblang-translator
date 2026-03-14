@@ -250,7 +250,6 @@ export const TextSelector = (() => {
       }
 
       if (freshNodes.length > 0) {
-        console.log(`[TextSelector] MutationObserver detected ${freshNodes.length} new nodes`);
         freshNodes.forEach(node => importNode(node));
         
         // Start observing new nodes for viewport
@@ -310,7 +309,6 @@ export const TextSelector = (() => {
         }
       }
     }
-    console.log(`[TextSelector] Found ${elements.length} paragraphs`);
     return elements;
   }
 

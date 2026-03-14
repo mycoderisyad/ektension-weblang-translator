@@ -1,4 +1,4 @@
-// Translation Engine — Upgraded with Batch API + sessionStorage Cache
+﻿// Translation Engine â€” Upgraded with Batch API + sessionStorage Cache
 // Inspired by XTranslate's page-translator.ts architecture
 import { TextSelector } from './textSelector.js';
 import { UI } from './ui.js';
@@ -142,7 +142,7 @@ export const TranslationEngine = (() => {
     
     for (const text of texts) {
       if (text.length > maxChars) {
-        // Text too long — split it first, then add pieces
+        // Text too long â€” split it first, then add pieces
         if (currentBatch.length) {
           batches.push(currentBatch);
           currentBatch = [];
@@ -253,12 +253,10 @@ export const TranslationEngine = (() => {
   // --- Full Page Translation (Upgraded) ---
   
   async function translateFullPageMode(sourceLang, targetLang, onProgress) {
-    console.log('🚀 Starting upgraded full page translation...');
     
     // Collect all text nodes
     const allNodes = TextSelector.collectAndImport();
     if (allNodes.length === 0) {
-      console.log('No text nodes found');
       return { success: true, message: 'No content to translate' };
     }
     
@@ -272,8 +270,6 @@ export const TranslationEngine = (() => {
       mode: 'fullpage'
     };
     
-    console.log(`[TranslationEngine] Collected ${allNodes.length} text nodes`);
-    
     // Start viewport observer for progressive translation
     TextSelector.startViewportObserver(allNodes);
     
@@ -281,8 +277,9 @@ export const TranslationEngine = (() => {
     TextSelector.startMutationObserver();
     TextSelector.setOnNewNodes(async (newNodes) => {
       if (!isTranslatingFlag || shouldStop) return;
-      console.log(`[TranslationEngine] Auto-translating ${newNodes.length} new dynamic nodes`);
-      await translateNodeBatch(newNodes, sourceLang, targetLang);
+      if (newNodes.length > 0) {
+        await translateNodeBatch(newNodes, sourceLang, targetLang);
+      }
     });
     
     // Translate all nodes in batches
@@ -295,7 +292,6 @@ export const TranslationEngine = (() => {
     }
     
     isTranslatingFlag = false;
-    console.log(`✅ Full page translation complete: ${translationData.translatedTexts.length} nodes translated`);
     
     return {
       success: true,
@@ -340,8 +336,6 @@ export const TranslationEngine = (() => {
     if (onProgress && translated > 0) {
       onProgress(translated, total, `Applied ${translated} cached translations`);
     }
-    
-    console.log(`[TranslationEngine] Cache hits: ${translated}, to translate: ${textsToTranslate.length}`);
     
     // Batch translate uncached texts
     if (textsToTranslate.length > 0) {
@@ -424,7 +418,6 @@ export const TranslationEngine = (() => {
   // --- Paragraph Mode Translation ---
   
   async function translateParagraphMode(sourceLang, targetLang, onProgress) {
-    console.log('🔄 Starting paragraph mode translation...');
     
     const paragraphs = TextSelector.getVisibleParagraphs();
     if (paragraphs.length === 0) {
@@ -530,7 +523,6 @@ export const TranslationEngine = (() => {
     }
     
     isTranslatingFlag = false;
-    console.log(`✅ Paragraph translation complete: ${translated}/${total}`);
     
     return {
       success: true,
@@ -581,8 +573,7 @@ export const TranslationEngine = (() => {
       targetLang: 'id',
       mode: 'paragraph'
     };
-    
-    console.log('✅ Original text restored');
+    return true;
   }
   
   // --- Tooltip Setting ---
@@ -614,7 +605,7 @@ export const TranslationEngine = (() => {
       zh: /[\u4E00-\u9FAF]/g,
       ko: /[\uAC00-\uD7AF]/g,
       ar: /[\u0600-\u06FF\u0750-\u077F]/g,
-      ru: /[а-яё]/gi,
+      ru: /[Ð°-ÑÑ‘]/gi,
     };
     const scores = {};
     for (const [lang, pattern] of Object.entries(patterns)) {
@@ -645,3 +636,4 @@ export const TranslationEngine = (() => {
     splitTextSmart
   };
 })();
+

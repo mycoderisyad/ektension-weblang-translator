@@ -1,18 +1,4 @@
-function sendMessage(payload) {
-  return new Promise((resolve) => {
-    try {
-      chrome.runtime.sendMessage(payload, (response) => {
-        if (chrome.runtime.lastError) {
-          resolve({ success: false, error: chrome.runtime.lastError.message });
-          return;
-        }
-        resolve(response || { success: false, error: 'No response' });
-      });
-    } catch (error) {
-      resolve({ success: false, error: error.message });
-    }
-  });
-}
+import { sendToBackground } from '../../popup/utils/messaging.js';
 
 export function createApiSettingsController({ message }) {
   const googleKeyInput = document.getElementById('googleKey');
@@ -43,7 +29,7 @@ export function createApiSettingsController({ message }) {
     }
 
     message.show(`Testing ${serviceName}...`, 'info');
-    const response = await sendMessage({ action: 'testAPI', apiType, apiKey });
+    const response = await sendToBackground({ action: 'testAPI', apiType, apiKey });
 
     if (response?.success) {
       message.show(`${serviceName} API works! Result: "${response.result}"`, 'success');

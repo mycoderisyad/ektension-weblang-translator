@@ -3,6 +3,7 @@ import { createMessage, bindPasswordToggles } from './utils/formHelpers.js';
 import { createApiSettingsController } from './controllers/apiSettings.js';
 import { createLanguageSettingsController } from './controllers/languageSettings.js';
 import { createDisplaySettingsController } from './controllers/displaySettings.js';
+import { populateLanguageSelect } from '../common/languages.js';
 
 const DEFAULT_SETTINGS = {
   googleKey: '',
@@ -48,6 +49,10 @@ export async function initializeOptionsPage() {
   if (!form) {
     return;
   }
+
+  // Populate language dropdowns from the shared data module
+  populateLanguageSelect('defaultSourceLang', true);
+  populateLanguageSelect('defaultTargetLang', false);
 
   bindPasswordToggles();
 

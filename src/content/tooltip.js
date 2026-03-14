@@ -158,7 +158,6 @@ export const Tooltip = (() => {
     createTooltipEl();
     isActive = true;
     document.addEventListener('mousemove', onMouseMove, { passive: true });
-    console.log('[Tooltip] Mouseover tooltip enabled');
   }
 
   // Disable tooltip tracking
@@ -171,7 +170,6 @@ export const Tooltip = (() => {
       tooltipEl = null;
     }
     currentTarget = null;
-    console.log('[Tooltip] Mouseover tooltip disabled');
   }
 
   // Check if tooltip is active

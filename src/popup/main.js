@@ -4,6 +4,7 @@ import { createAiController } from './controllers/aiController.js';
 import { initializeOptionsPage } from '../options/app.js';
 import { createExportController } from './controllers/exportController.js';
 import { createSettingsController } from './controllers/settingsController.js';
+import { populateLanguageSelect } from '../common/languages.js';
 
 function setStatus(text) {
   const element = document.getElementById('status');
@@ -38,6 +39,10 @@ async function ensureContentScript() {
 }
 
 async function initPopup() {
+  // Populate language dropdowns from the shared data module
+  populateLanguageSelect('sourceLang', true);
+  populateLanguageSelect('targetLang', false);
+
   const services = {
     sendToContent,
     sendToBackground,

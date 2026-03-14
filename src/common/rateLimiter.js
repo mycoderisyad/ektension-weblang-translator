@@ -2,33 +2,35 @@ export const RateLimiter = (() => {
   let lastRequestAt = 0;
   let requestCount = 0;
   let windowStart = Date.now();
-  
-  function isLimited(ms = 25) { // ⚡ INSTANT: Super fast like Chrome
+
+  /**
+   * Returns true if the caller should be throttled.
+   * Resets the counter every 3 seconds.
+   * @param {number} [ms=25] - Minimum milliseconds between requests.
+   */
+  function isLimited(ms = 25) {
     const now = Date.now();
-    
-    // Reset counter every 3 seconds for instant reset
+
+    // Reset counter every 3 seconds
     if (now - windowStart > 3000) {
       requestCount = 0;
       windowStart = now;
     }
-    
-    // ⚡ INSTANT: Maximum limit for Chrome-like speed
-    if (requestCount >= 500) { // 10x higher limit for instant translation
-      console.log('Rate limit hit: too many requests');
+
+    // Hard cap per window to prevent runaway requests
+    if (requestCount >= 500) {
       return true;
     }
-    
-    // ⚡ INSTANT: Minimal delay for maximum speed
+
+    // Enforce minimum delay between consecutive requests
     if (now - lastRequestAt < ms) {
       return true;
     }
-    
+
     lastRequestAt = now;
     requestCount++;
     return false;
   }
-  
+
   return { isLimited };
 })();
-
-

@@ -64,7 +64,6 @@ export const UI = (() => {
       } catch { element.textContent = translation; }
     } else {
       // ⚡ FULL PAGE MODE: HANYA ganti text, TANPA background/highlight seperti Chrome
-      console.log('🔄 Full page: Direct text replacement, no styling');
       
       if (!element.hasAttribute('data-weblang-original')) {
         element.setAttribute('data-weblang-original', element.textContent);

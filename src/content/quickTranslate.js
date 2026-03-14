@@ -17,11 +17,9 @@ export function initQuickTranslate() {
   // Prevent double binding of listeners
   // @ts-ignore
   if (window.__WEBLANG_QT_INIT) {
-    console.log('Quick translate already initialized');
     return;
   }
-  
-  console.log('Initializing quick translate...');
+
   isQuickTranslateEnabled = true;
   // @ts-ignore
   window.__WEBLANG_QT_INIT = true;
@@ -132,13 +130,11 @@ export function initQuickTranslate() {
     try {
       // Check global flag first (fastest check)
       if (!isQuickTranslateEnabled) {
-        console.log('Quick translate globally disabled, skipping...');
         return;
       }
 
       // Check if extension context is still valid
       if (!isExtensionContextValid()) {
-        console.log('Extension context invalidated, skipping quick translate');
         return;
       }
 
@@ -147,20 +143,17 @@ export function initQuickTranslate() {
         try {
           chrome.storage.sync.get(['quickTranslateEnabled'], (data) => {
             if (chrome.runtime.lastError) {
-              console.log('Storage access error:', chrome.runtime.lastError);
               resolve(false);
             } else {
               resolve(data.quickTranslateEnabled !== false);
             }
           });
         } catch (e) {
-          console.log('Storage access exception:', e);
           resolve(false);
         }
       });
       
       if (!isEnabled || !isQuickTranslateEnabled) {
-        console.log('Quick translate is disabled, skipping...');
         return;
       }
       
@@ -177,14 +170,8 @@ export function initQuickTranslate() {
       
       // Get selection immediately like the working version
       let selected = window.getSelection().toString().trim();
-      
-      console.log('Quick translate selection check:', { 
-        text: selected.substring(0, 50) + (selected.length > 50 ? '...' : ''),
-        length: selected.length
-      });
-      
+
       if (selected.length > 0) {
-        console.log('Valid selection detected, showing translate button...');
         
         // Show translate button immediately like the working version
         await showQuickTranslateButton(e, selected);
@@ -201,13 +188,11 @@ export function initQuickTranslate() {
     try {
       // Check global flag at start of function
       if (!isQuickTranslateEnabled) {
-        console.log('Quick translate disabled during showQuickTranslateButton');
         return;
       }
 
       // Check extension context before proceeding
       if (!isExtensionContextValid()) {
-        console.log('Extension context invalidated in showQuickTranslateButton');
         return;
       }
 
@@ -225,23 +210,17 @@ export function initQuickTranslate() {
         else if (/[а-я]/.test(selected.toLowerCase())) sourceLang = 'ru';
         else if (/[à-ÿ]/.test(selected.toLowerCase())) sourceLang = 'fr';
         else sourceLang = 'en';
-        
-        console.log(`Auto-detected language: ${sourceLang} for text: "${selected.substring(0, 30)}..."`);
       }
-
-      console.log(`Translation settings: ${sourceLang} → ${targetLang}`);
 
       // Ensure we have valid language codes (not "auto")
       if (sourceLang === 'auto') {
-        console.log('Fallback: sourceLang was still auto, setting to en');
         sourceLang = 'en';
       }
       if (targetLang === 'auto') {
-        console.log('Fallback: targetLang was auto, setting to id');
         targetLang = 'id';
       }
 
-      // Skip jika bahasa sama untuk hindari error
+      // If source and target are the same, switch target language automatically
       if (sourceLang === targetLang) {
         // Auto switch target language based on source
         if (sourceLang === 'id') targetLang = 'en';
@@ -253,16 +232,12 @@ export function initQuickTranslate() {
         else if (sourceLang === 'de') targetLang = 'en';
         else if (sourceLang === 'es') targetLang = 'en';
         else if (sourceLang === 'ru') targetLang = 'en';
-        else targetLang = 'en'; // Default
-
-        console.log(`Same language detected, switching target: ${sourceLang} → ${targetLang}`);
+        else targetLang = 'en';
       }
 
       // Show popup with "Translating..." immediately
       popupEl = createPopup(e.pageX, e.pageY, 'Translating...');
       document.body.appendChild(popupEl);
-      
-      console.log(`Translation request: "${selected.substring(0, 30)}..." from ${sourceLang} to ${targetLang}`);
 
       // Make popup draggable
       const header = popupEl.querySelector('.weblang-quick-header');
@@ -292,18 +267,15 @@ export function initQuickTranslate() {
 
       // Check if still enabled after first request
       if (!isQuickTranslateEnabled) {
-        console.log('Quick translate disabled during translation, stopping...');
         removeUI();
         return;
       }
 
       if (!translation || translation === selected) {
-        console.log('Auto retry for highlight translate');
+        // Retry after short delay
         await new Promise(r => setTimeout(r, 500));
         
-        // Check again before retry
         if (!isQuickTranslateEnabled) {
-          console.log('Quick translate disabled during retry, stopping...');
           removeUI();
           return;
         }
@@ -311,20 +283,16 @@ export function initQuickTranslate() {
         translation = await requestTranslation(selected, sourceLang, targetLang);
       }
 
-      // Check again before second retry
       if (!isQuickTranslateEnabled) {
-        console.log('Quick translate disabled during second retry, stopping...');
         removeUI();
         return;
       }
 
       if (!translation || translation === selected) {
-        console.log('Second retry for highlight translate');
+        // Second retry after longer delay
         await new Promise(r => setTimeout(r, 800));
         
-        // Final check before last retry
         if (!isQuickTranslateEnabled) {
-          console.log('Quick translate disabled during final retry, stopping...');
           removeUI();
           return;
         }
@@ -332,19 +300,15 @@ export function initQuickTranslate() {
         translation = await requestTranslation(selected, sourceLang, targetLang);
       }
 
-      // Final check before showing result
       if (!isQuickTranslateEnabled) {
-        console.log('Quick translate disabled before showing result, stopping...');
         removeUI();
         return;
       }
 
       if (translation && translation !== selected) {
         contentNode.textContent = translation;
-        console.log('Translation successful:', translation.substring(0, 50));
       } else {
         contentNode.textContent = 'Translation failed after 3 attempts';
-        console.log('Translation failed after retries');
       }
 
       // Add click handlers for popup actions
@@ -403,21 +367,18 @@ export function initQuickTranslate() {
       try {
         // Check extension context before making request
         if (!isExtensionContextValid()) {
-          console.log('Extension context invalidated, cannot make translation request');
           resolve(null);
           return;
         }
 
         chrome.runtime.sendMessage({ type: 'TRANSLATE_TEXT', text, from, to }, (resp) => {
           if (chrome.runtime.lastError) {
-            console.log('Chrome runtime error:', chrome.runtime.lastError);
             resolve(null);
           } else {
             resolve(resp?.translation || null);
           }
         });
       } catch (e) {
-        console.log('Exception in requestTranslation:', e);
         resolve(null);
       }
     });
@@ -431,33 +392,27 @@ export function initQuickTranslate() {
   window.__WL_QT_UP = __wl_up;
 }
 
-export function disableQuickTranslate(){
-  console.log('Disabling quick translate...');
-  
-  // Set global flag to stop all operations immediately
+export function disableQuickTranslate() {
   isQuickTranslateEnabled = false;
-  
-  // Remove all existing quick translate UI elements
+
+  // Remove all existing quick translate UI
   try {
     document.querySelectorAll('.weblang-quick-popup').forEach(el => el.remove());
     document.querySelectorAll('.weblang-translate-btn').forEach(el => el.remove());
-  } catch(e) {
-    console.log('Error removing quick translate UI:', e);
+  } catch (e) {
+    console.error('Error removing quick translate UI:', e);
   }
   
   // Remove event listeners
   try { if (window.__WL_QT_DOWN) document.removeEventListener('mousedown', window.__WL_QT_DOWN); } catch{}
   try { if (window.__WL_QT_UP) document.removeEventListener('mouseup', window.__WL_QT_UP); } catch{}
   
-  // Clear global references
   // @ts-ignore
   window.__WL_QT_DOWN = null;
   // @ts-ignore
   window.__WL_QT_UP = null;
   // @ts-ignore
   window.__WEBLANG_QT_INIT = false;
-  
-  console.log('Quick translate disabled successfully');
 }
 
 

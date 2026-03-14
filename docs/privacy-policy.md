@@ -1,3 +1,9 @@
+---
+layout: default
+title: Privacy Policy
+permalink: /
+---
+
 # Privacy Policy for WebLang Translator
 
 **Last Updated:** March 14, 2026

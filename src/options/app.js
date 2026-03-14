@@ -5,12 +5,16 @@ import { createLanguageSettingsController } from './controllers/languageSettings
 import { createDisplaySettingsController } from './controllers/displaySettings.js';
 import { populateLanguageSelect } from '../common/languages.js';
 import { initThemeController } from '../common/themeController.js';
+import { DEFAULT_GEMINI_TTS_VOICE } from '../common/geminiTts.js';
 
 const DEFAULT_SETTINGS = {
   googleKey: '',
   azureKey: '',
   geminiKey: '',
+  enableAiService: true,
+  enableGeminiTts: true,
   geminiModel: '',
+  geminiTtsVoice: DEFAULT_GEMINI_TTS_VOICE,
   provider: 'google',
   useFreeMode: false,
   quickTranslateEnabled: true,
@@ -24,7 +28,10 @@ async function loadSettings() {
     'googleKey',
     'azureKey',
     'geminiKey',
+    'enableAiService',
+    'enableGeminiTts',
     'geminiModel',
+    'geminiTtsVoice',
     'provider',
     'useFreeMode',
     'quickTranslateEnabled',

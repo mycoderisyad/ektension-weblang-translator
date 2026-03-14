@@ -5,117 +5,170 @@
     <link rel="stylesheet" href="../styles/options/options.css" />
   </head>
   <body>
-    <div class="options-wrap">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 19px;">
-        <h2 style="margin:0;">WebLang Settings</h2>
-        <button id="themeToggle" class="icon-toggle-btn" aria-label="Toggle Theme" title="Toggle Theme" style="background:none;border:none;color:var(--text-main);cursor:pointer;">
-          <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-          <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-        </button>
-      </div>
-      <form id="apiForm" autocomplete="off">
-        <!-- Quick Translate Toggle -->
-        <div class="section">
-          <h3>Quick Translate</h3>
-          <label class="checkbox-label">
-            <input type="checkbox" id="quickTranslateEnabled" />
-            <strong>Quick Translate (selection popup)</strong>
-          </label>
-          <small>When enabled, selecting text will show a translate popup near the cursor.</small>
-        </div>
-
-        <!-- Translation Mode -->
-        <div class="section">
-          <h3>Translation Mode</h3>
-          <label class="checkbox-label">
-            <input type="checkbox" id="useFreeMode" />
-            <strong>Use Free Mode</strong>
-          </label>
-          <small>Free mode doesn't require an API key, suitable for light usage</small>
-        </div>
-
-        <!-- API Keys (only shown in paid mode) -->
-        <div class="section" id="apiSection">
-          <h3>API Keys (Paid Mode)</h3>
-          <label>Google Translate API Key
-            <div class="input-with-toggle">
-              <input type="password" id="googleKey" placeholder="API Key (optional)" />
-              <button type="button" class="toggle-password" data-target="googleKey" aria-label="Show/Hide API Key">
-                <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </button>
-            </div>
-            <button type="button" class="test-btn" id="testGoogleBtn">Test Google API</button>
-          </label>
-
-          <label>Azure Translator API Key
-            <div class="input-with-toggle">
-              <input type="password" id="azureKey" placeholder="API Key (optional)" />
-              <button type="button" class="toggle-password" data-target="azureKey" aria-label="Show/Hide API Key">
-                <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </button>
-            </div>
-            <button type="button" class="test-btn" id="testAzureBtn">Test Azure API</button>
-          </label>
-
-          <label>Gemini AI API Key
-            <div class="input-with-toggle">
-              <input type="password" id="geminiKey" placeholder="API Key (for AI features)" />
-              <button type="button" class="toggle-password" data-target="geminiKey" aria-label="Show/Hide API Key">
-                <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </button>
-            </div>
-          </label>
-
-          <label>Gemini AI Model
-            <input type="text" id="geminiModel" placeholder="gemini-2.0-flash (default)" />
-            <small style="color:#888; font-size:11px;">e.g. gemini-2.5-flash, gemini-2.0-flash-lite, gemini-1.5-pro</small>
-          </label>
-
-          <label>Translation Provider Priority
-            <select id="provider">
-              <option value="google">Google Translate</option>
-              <option value="azure">Azure Translator</option>
-            </select>
-          </label>
-        </div>
-
-        <!-- Language Settings -->
-        <div class="section">
-          <h3>Default Language Settings</h3>
-          <div class="language-grid">
-            <label>
-              Default Source Language
-              <!-- Populated dynamically via languages.js -->
-              <select id="defaultSourceLang"></select>
-            </label>
-            <label>
-              Default Target Language
-              <!-- Populated dynamically via languages.js -->
-              <select id="defaultTargetLang"></select>
-            </label>
+    <div class="page-shell">
+      <main class="options-wrap">
+        <header class="page-header">
+          <div class="page-title-group">
+            <span class="page-kicker">Settings</span>
+            <h1>WebLang Control Panel</h1>
+            <p>Manage translation, AI, and TTS behavior from one place.</p>
           </div>
-        </div>
+          <button id="themeToggle" class="theme-toggle-btn" aria-label="Toggle Theme" title="Toggle Theme">
+            <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          </button>
+        </header>
 
-        <button type="submit">Save Settings</button>
-        <div id="savedMsg"></div>
-      </form>
-      <hr />
-      <div class="tips">
-        <b>Usage Tips:</b><br />
-        <div class="tip-item"><strong>Free Mode:</strong> Ideal for daily use, no cost limits</div>
-        <div class="tip-item"><strong>Paid Mode:</strong> More accurate, faster results, and supports more languages</div>
-        <div class="tip-item"><strong>Gemini API:</strong> Free for AI features (summarize, analyze, keywords)</div>
-        <div class="tip-item"><strong>Auto Fallback:</strong> If paid API fails, automatically falls back to free mode</div>
-      </div>
+        <div class="settings-layout">
+          <form id="apiForm" class="settings-main" autocomplete="off">
+            <div class="section-grid">
+              <section class="section section-card section-card--compact">
+                <div class="section-heading">
+                  <h2>Quick Translate</h2>
+                  <p>Control the floating translation popup shown on text selection.</p>
+                </div>
+                <label class="checkbox-label checkbox-card">
+                  <input type="checkbox" id="quickTranslateEnabled" />
+                  <span>
+                    <strong>Quick Translate</strong>
+                    <small>Show a popup near the cursor when text is selected.</small>
+                  </span>
+                </label>
+              </section>
+
+              <section class="section section-card section-card--compact">
+                <div class="section-heading">
+                  <h2>Translation Mode</h2>
+                  <p>Choose whether the extension prefers free translation sources.</p>
+                </div>
+                <label class="checkbox-label checkbox-card">
+                  <input type="checkbox" id="useFreeMode" />
+                  <span>
+                    <strong>Use Free Mode</strong>
+                    <small>Disable paid providers and rely on free translation fallbacks.</small>
+                  </span>
+                </label>
+              </section>
+            </div>
+
+            <section class="section section-card" id="apiSection">
+              <div class="section-heading">
+                <h2>API Keys and AI Controls</h2>
+                <p>Keep your Gemini key saved, then turn AI analysis or Gemini TTS on only when you want to use them.</p>
+              </div>
+
+              <div class="field-grid">
+                <label>Google Translate API Key
+                  <div class="input-with-toggle">
+                    <input type="password" id="googleKey" placeholder="API Key (optional)" />
+                    <button type="button" class="toggle-password" data-target="googleKey" aria-label="Show/Hide API Key">
+                      <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                  <button type="button" class="test-btn" id="testGoogleBtn">Test Google API</button>
+                </label>
+
+                <label>Azure Translator API Key
+                  <div class="input-with-toggle">
+                    <input type="password" id="azureKey" placeholder="API Key (optional)" />
+                    <button type="button" class="toggle-password" data-target="azureKey" aria-label="Show/Hide API Key">
+                      <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                  <button type="button" class="test-btn" id="testAzureBtn">Test Azure API</button>
+                </label>
+              </div>
+
+              <label>Gemini API Key
+                <div class="input-with-toggle">
+                  <input type="password" id="geminiKey" placeholder="API Key (for AI features and TTS)" />
+                  <button type="button" class="toggle-password" data-target="geminiKey" aria-label="Show/Hide API Key">
+                    <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                </div>
+              </label>
+
+              <div class="field-grid field-grid--switches">
+                <label class="checkbox-label checkbox-card">
+                  <input type="checkbox" id="enableAiService" />
+                  <span>
+                    <strong>Enable AI Service</strong>
+                    <small>Use Gemini for summarize, analyze, and keyword extraction.</small>
+                  </span>
+                </label>
+
+                <label class="checkbox-label checkbox-card">
+                  <input type="checkbox" id="enableGeminiTts" />
+                  <span>
+                    <strong>Enable Gemini TTS</strong>
+                    <small>If disabled, TTS automatically falls back to browser speech synthesis.</small>
+                  </span>
+                </label>
+              </div>
+
+              <div class="field-grid">
+                <label>Gemini AI Model
+                  <input type="text" id="geminiModel" placeholder="gemini-2.0-flash (default)" />
+                  <small>Examples: gemini-2.5-flash, gemini-2.5-flash-lite, gemini-1.5-pro.</small>
+                </label>
+
+                <label>Gemini TTS Voice
+                  <select id="geminiTtsVoice"></select>
+                  <small>Used when Gemini TTS is enabled. TTS model stays fixed to gemini-2.5-flash-preview-tts.</small>
+                </label>
+
+                <label>Translation Provider Priority
+                  <select id="provider">
+                    <option value="google">Google Translate</option>
+                    <option value="azure">Azure Translator</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+
+            <section class="section section-card">
+              <div class="section-heading">
+                <h2>Default Languages</h2>
+                <p>Set the source and target language used when the popup or page tools start.</p>
+              </div>
+              <div class="language-grid">
+                <label>
+                  Default Source Language
+                  <select id="defaultSourceLang"></select>
+                </label>
+                <label>
+                  Default Target Language
+                  <select id="defaultTargetLang"></select>
+                </label>
+              </div>
+            </section>
+
+            <div class="settings-actions">
+              <button type="submit">Save Settings</button>
+              <div id="savedMsg"></div>
+            </div>
+          </form>
+
+          <aside class="settings-side">
+            <section class="tips tips-card">
+              <h2>Usage Tips</h2>
+              <div class="tip-item"><strong>Free Mode:</strong> Best when you want zero API dependency for translation.</div>
+              <div class="tip-item"><strong>AI Service Switch:</strong> Keep the Gemini key stored, but disable AI analysis anytime.</div>
+              <div class="tip-item"><strong>Gemini TTS Switch:</strong> Turn Gemini TTS off to force browser SpeechSynthesis.</div>
+              <div class="tip-item"><strong>Fallback:</strong> If Gemini TTS is disabled or unavailable, speech uses the browser voice engine.</div>
+            </section>
+          </aside>
+        </div>
+      </main>
     </div>
     <script src="options.js"></script>
   </body>

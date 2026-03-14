@@ -26,6 +26,7 @@ export function initQuickTranslate() {
   let quickTranslateButton = null;
   let popupEl = null;
   let selectionTimeout = null;
+  let suppressMouseUpUntil = 0;
 
   function removeUI() {
     // Remove any existing quick translate popup
@@ -72,15 +73,20 @@ export function initQuickTranslate() {
       padding:0 !important;
       border-radius:12px !important;
       box-shadow:0 20px 40px rgba(0,0,0,0.6) !important;
-      max-width:420px !important;
+      width:min(360px, calc(100vw - 20px)) !important;
       min-width:280px !important;
+      min-height:168px !important;
+      max-width:min(720px, calc(100vw - 20px)) !important;
+      max-height:calc(100vh - 20px) !important;
       font-size:14px !important;
       line-height:1.6 !important;
       border:2px dashed ${border} !important;
       backdrop-filter:blur(8px) !important;
       animation:fadeInUp 0.3s ease-out !important;
+      resize:both !important;
       overflow:hidden !important;
-      display:block !important;
+      display:flex !important;
+      flex-direction:column !important;
       visibility:visible !important;
       opacity:1 !important;
     `;
@@ -92,9 +98,9 @@ export function initQuickTranslate() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
         </button>
       </div>
-      <div style="padding:14px">
-        <div class="weblang-quick-content" style="white-space:pre-wrap;word-break:break-word;margin-bottom:12px;color:${color};font-size:14px;line-height:1.5">${text}</div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center">
+      <div style="padding:14px;display:flex;flex:1 1 auto;flex-direction:column;min-height:0">
+        <div class="weblang-quick-content" style="white-space:pre-wrap;word-break:break-word;margin-bottom:12px;color:${color};font-size:14px;line-height:1.5;flex:1 1 auto;min-height:56px;overflow:auto;padding-right:4px">${text}</div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;flex:0 0 auto">
           <button data-action="speak" title="Text-to-Speech" style="background:none;color:${color};border:none;padding:4px;border-radius:4px;cursor:pointer;display:flex;align-items:center;opacity:0.8">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
           </button>
@@ -104,6 +110,22 @@ export function initQuickTranslate() {
         </div>
       </div>
     `;
+
+    const speakButton = wrapper.querySelector('button[data-action="speak"]');
+    if (speakButton) {
+      speakButton.setAttribute('aria-pressed', 'false');
+      speakButton.setAttribute('aria-label', 'Play Text-to-Speech');
+    }
+
+    // Prevent quick-translate mouseup retrigger while interacting with popup action buttons.
+    wrapper.addEventListener('mousedown', (evt) => {
+      const target = evt.target;
+      if (!(target instanceof Element)) return;
+      const actionButton = target.closest('[data-action]');
+      if (actionButton) {
+        suppressMouseUpUntil = Date.now() + 600;
+      }
+    }, true);
 
     // Add animation CSS if not exists
     if (!document.getElementById('weblang-quick-animations')) {
@@ -122,6 +144,16 @@ export function initQuickTranslate() {
           color: #fff !important;
         }
         .weblang-quick-popup button[data-action="copy"]:hover { text-decoration: underline; }
+        .weblang-quick-content::-webkit-scrollbar {
+          width: 8px;
+        }
+        .weblang-quick-content::-webkit-scrollbar-thumb {
+          background: rgba(44,62,80,0.24);
+          border-radius: 999px;
+        }
+        .weblang-quick-content::-webkit-scrollbar-track {
+          background: rgba(255,255,255,0.12);
+        }
       `;
       document.head.appendChild(style);
     }
@@ -140,6 +172,10 @@ export function initQuickTranslate() {
 
   const __wl_up = async function (e) {
     try {
+      if (Date.now() < suppressMouseUpUntil) {
+        return;
+      }
+
       // Check global flag first (fastest check)
       if (!isQuickTranslateEnabled) {
         return;
@@ -259,8 +295,11 @@ export function initQuickTranslate() {
         if (!drag) return;
         const dx = ev.clientX - sx;
         const dy = ev.clientY - sy;
-        popupEl.style.left = `${Math.max(0, ox + dx)}px`;
-        popupEl.style.top  = `${Math.max(0, oy + dy)}px`;
+        const rect = popupEl.getBoundingClientRect();
+        const maxX = Math.max(10, window.innerWidth - rect.width - 10);
+        const maxY = Math.max(10, window.innerHeight - rect.height - 10);
+        popupEl.style.left = `${Math.max(10, Math.min(ox + dx, maxX))}px`;
+        popupEl.style.top  = `${Math.max(10, Math.min(oy + dy, maxY))}px`;
       };
       header.addEventListener('mousedown', (ev)=>{
         drag = true;
@@ -327,25 +366,37 @@ export function initQuickTranslate() {
       // Add click handlers for popup actions
       popupEl.addEventListener('click', async (clickEvent) => {
         const target = clickEvent.target;
-        if (!(target instanceof HTMLElement)) return;
-        const action = target.getAttribute('data-action');
+        if (!(target instanceof Element)) return;
+
+        const actionButton = target.closest('[data-action]');
+        if (!(actionButton instanceof HTMLButtonElement)) return;
+
+        const action = actionButton.getAttribute('data-action');
         if (action === 'close') { 
           TTS.stop();
           removeUI(); 
           return; 
         }
         if (action === 'speak') {
+          const setSpeakState = (isPlaying) => {
+            actionButton.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
+            actionButton.setAttribute('aria-label', isPlaying ? 'Stop Text-to-Speech' : 'Play Text-to-Speech');
+            actionButton.innerHTML = isPlaying
+              ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>'
+              : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>';
+          };
+
           try {
             if (TTS.isSpeaking()) {
               TTS.stop();
-              target.textContent = '🔊';
+              setSpeakState(false);
             } else {
-              target.textContent = '⏹️';
+              setSpeakState(true);
               await TTS.speak(contentNode.textContent || '', targetLang);
-              target.textContent = '🔊';
+              setSpeakState(false);
             }
           } catch {
-            target.textContent = '🔊';
+            setSpeakState(false);
           }
         }
         if (action === 'copy') {

@@ -129,7 +129,7 @@ if (!__g.__WEBLANG_CS_INIT) {
           }
 
           const aiPopup = new AIPopup();
-          aiPopup.show(msg.result, msg.aiType, msg.targetLang);
+          await aiPopup.show(msg.result, msg.aiType, msg.targetLang);
           sendResponse({ success: true });
         } catch (e) {
           console.error('AI popup error:', e);

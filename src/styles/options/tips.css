@@ -1,7 +1,20 @@
-.tips { font-size:13px; background:#19223c; border:1px solid #233260; border-radius:8px; padding:14px 16px; margin-top:17px; color:#8cb7ff; line-height:1.6; }
-.tip-item { margin-bottom:10px; padding-left:3px; }
+.tips {
+  font-size:13px;
+  background: linear-gradient(180deg, rgba(59,130,246,.14), rgba(59,130,246,.08));
+  border:1px solid rgba(59,130,246,.22);
+  border-radius:16px;
+  padding:18px;
+  color: var(--text-main);
+  line-height:1.7;
+}
+.tips h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.tip-item { margin-bottom:12px; padding-left:3px; color: var(--text-secondary); }
 .tip-item:last-child { margin-bottom:0; }
-.tip-item strong { color:#3b82f6; font-weight:600; }
-hr { margin:22px 0 14px 0; border:none; border-top:1px solid var(--border); }
+.tip-item strong { color:var(--info); font-weight:700; }
 
 

@@ -11,8 +11,6 @@
     <!-- Header -->
     <div class="app-header">
       <div class="app-title" style="display: flex; align-items: center; gap: 12px;">
-        <span>WebLang</span>
-        
         <div class="mode-status" id="modeIndicator" style="margin-left: 4px;">
           <div class="status-dot"></div>
           <span id="modeText">Loading...</span>
@@ -301,9 +299,7 @@
           Back
         </button>
       </div>
-
       <div class="options-wrap">
-        <h2>WebLang Settings</h2>
         <form id="apiForm" autocomplete="off">
           <!-- Quick Translate Toggle -->
           <div class="section">
@@ -356,7 +352,7 @@
 
             <label>Gemini AI API Key
               <div class="input-with-toggle">
-                <input type="password" id="geminiKey" placeholder="API Key (for AI features)" />
+                <input type="password" id="geminiKey" placeholder="API Key (for AI features and TTS)" />
                 <button type="button" class="toggle-password" data-target="geminiKey" aria-label="Show/Hide API Key">
                   <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -366,9 +362,24 @@
               </div>
             </label>
 
+            <label class="checkbox-label">
+              <input type="checkbox" id="enableAiService" />
+              <strong>Enable AI Service</strong>
+            </label>
+
+            <label class="checkbox-label">
+              <input type="checkbox" id="enableGeminiTts" />
+              <strong>Enable Gemini TTS</strong>
+            </label>
+
             <label>Gemini AI Model
               <input type="text" id="geminiModel" placeholder="gemini-2.0-flash (default)" />
               <small style="color:#888; font-size:11px;">e.g. gemini-2.5-flash, gemini-2.5-flash-lite, gemini-2.0-flash-lite, etc.</small>
+            </label>
+
+            <label>Gemini TTS Voice
+              <select id="geminiTtsVoice"></select>
+              <small style="color:#888; font-size:11px;">Used for TTS when Gemini API key is configured. Model is fixed to gemini-2.5-flash-preview-tts.</small>
             </label>
 
             <label>Translation Provider Priority

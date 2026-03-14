@@ -1,24 +1,104 @@
-.checkbox-label { display:flex; align-items:center; gap:10px; margin-bottom:8px; cursor:pointer; padding:7px 0; user-select:none; }
-.checkbox-label input[type="checkbox"] { accent-color: var(--primary); width:18px; height:18px; margin:0; cursor:pointer; }
-.checkbox-label strong { color: var(--success); font-size:14.5px; letter-spacing:.1px; }
-form label { display:block; margin-bottom:12px; font-weight:500; color: var(--text-secondary); }
-input[type="text"], input[type="password"], select { width:100%; box-sizing:border-box; margin-top:5px; margin-bottom:4px; padding:10px 11px; border-radius:5px; border:1px solid var(--border); background: var(--bg-dark); color: var(--text-main); font-size:13.6px; font-family: var(--font-main); transition: border var(--transition), box-shadow var(--transition); }
-input[type="text"]:focus, input[type="password"]:focus, select:focus { border-color: var(--info); outline:none; background:#18181e; }
+.checkbox-label { display:flex; align-items:flex-start; gap:12px; cursor:pointer; user-select:none; }
+.checkbox-label input[type="checkbox"] { accent-color: var(--primary); width:18px; height:18px; margin:2px 0 0; cursor:pointer; flex:0 0 auto; }
+.checkbox-label span { display:block; min-width:0; }
+.checkbox-label strong { display:block; color: var(--text-main); font-size:14.5px; letter-spacing:.1px; }
+.checkbox-label small { margin-top:4px; }
+.checkbox-card {
+  padding: 14px 15px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255,255,255,.02);
+}
+form label { display:block; margin-bottom:14px; font-weight:600; color: var(--text-main); }
+input[type="text"], input[type="password"], select {
+  width:100%;
+  box-sizing:border-box;
+  margin-top:7px;
+  margin-bottom:4px;
+  padding:12px 13px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background: var(--bg-dark);
+  color: var(--text-main);
+  font-size:13.8px;
+  font-family: var(--font-main);
+  transition: border var(--transition), box-shadow var(--transition), background var(--transition);
+}
+input[type="text"]:focus, input[type="password"]:focus, select:focus {
+  border-color: var(--info);
+  outline:none;
+  background: var(--bg-darker);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.14);
+}
+input:disabled, select:disabled {
+  cursor: not-allowed;
+  opacity: .72;
+}
 .input-with-toggle { position:relative; display:flex; align-items:center; }
-.input-with-toggle input { padding-right: 40px; }
-.toggle-password { position:absolute; right:8px; background:none; border:none; cursor:pointer; color:#888; padding:3px; border-radius:4px; transition: background var(--transition), color var(--transition); display:flex; align-items:center; justify-content:center; outline:none; }
+.input-with-toggle input { padding-right: 44px; }
+.toggle-password {
+  position:absolute;
+  right:8px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  color:var(--text-secondary);
+  padding:5px;
+  border-radius:8px;
+  transition: background var(--transition), color var(--transition);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  outline:none;
+}
 .toggle-password:hover, .toggle-password:focus { background: var(--muted); color:#fff; }
 .eye-icon { stroke-width: 2; width:17px; height:17px; transition: opacity var(--transition); }
 .toggle-password.hidden .eye-icon { opacity:.7; }
-small { color:#888da6; font-size:12px; display:block; margin-top:3px; font-style: italic; }
-button[type="submit"] { background: var(--primary); color:#fff; border:none; border-radius:7px; padding:12px 0; font-size:15px; font-weight:600; width:100%; transition: background var(--transition), box-shadow var(--transition); box-shadow: 0 2px 7px rgba(34,197,94,.11); margin-top:7px; letter-spacing:.1px; }
-button[type="submit"]:hover, button[type="submit"]:focus { background:#24e38a; color:#fff; box-shadow: 0 2px 12px rgba(34,197,94,.21); }
-#savedMsg { font-size:13px; font-weight:500; margin-top:13px; padding:9px 0; border-radius:6px; text-align:center; min-height:18px; transition: background var(--transition), color var(--transition); }
-#savedMsg.success { color: var(--success); background: #193a2a; }
-#savedMsg.error { color: var(--danger); background: #361818; }
-#savedMsg.info { color: var(--info); background: #1a2332; }
-.test-btn { background: var(--info); color:#ffffff; border:none; padding:6px 12px; border-radius:4px; font-size:11px; font-weight:500; cursor:pointer; margin-top:8px; width:100%; transition: background var(--transition); }
-.test-btn:hover { background:#2563eb; }
-.test-btn:active { background:#1d4ed8; }
+small { color:var(--text-secondary); font-size:12px; display:block; margin-top:4px; line-height:1.5; }
+button[type="submit"] {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color:#fff;
+  border:none;
+  border-radius:14px;
+  padding:14px 18px;
+  font-size:15px;
+  font-weight:700;
+  width:100%;
+  transition: transform var(--transition), box-shadow var(--transition), filter var(--transition);
+  box-shadow: 0 12px 22px rgba(34,197,94,.18);
+  letter-spacing:.1px;
+}
+button[type="submit"]:hover, button[type="submit"]:focus {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 16px 28px rgba(34,197,94,.24);
+}
+#savedMsg {
+  font-size:13px;
+  font-weight:600;
+  padding:10px 12px;
+  border-radius:12px;
+  text-align:center;
+  min-height:18px;
+  transition: background var(--transition), color var(--transition);
+}
+#savedMsg.success { color: var(--success); background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.2); }
+#savedMsg.error { color: var(--danger); background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.2); }
+#savedMsg.info { color: var(--info); background: rgba(59,130,246,.12); border: 1px solid rgba(59,130,246,.2); }
+.test-btn {
+  background: rgba(59,130,246,.14);
+  color: var(--info);
+  border:1px solid rgba(59,130,246,.24);
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:8px;
+  width:100%;
+  transition: background var(--transition), color var(--transition), transform var(--transition);
+}
+.test-btn:hover { background: rgba(59,130,246,.22); transform: translateY(-1px); }
+.test-btn:active { transform: translateY(0); }
 
 

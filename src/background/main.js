@@ -3,6 +3,7 @@ import { RateLimiter } from '../common/rateLimiter.js';
 import { ExportUtils } from './export.js';
 import { UniversalTranslator } from './translator.js';
 import { GeminiAI } from './aiService.js';
+import { DEFAULT_GEMINI_TTS_VOICE, normalizeGeminiTtsVoice } from '../common/geminiTts.js';
 
 // Open side panel when clicking the extension icon
 chrome.action.onClicked.addListener(async (tab) => {
@@ -64,7 +65,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
-      const apiKeys = await StorageUtils.get(['googleKey', 'azureKey', 'geminiKey', 'geminiModel', 'provider', 'rateLimit', 'useFreeMode']);
+      const apiKeys = await StorageUtils.get([
+        'googleKey',
+        'azureKey',
+        'geminiKey',
+        'enableAiService',
+        'enableGeminiTts',
+        'geminiModel',
+        'geminiTtsVoice',
+        'provider',
+        'rateLimit',
+        'useFreeMode'
+      ]);
       const provider = apiKeys.provider || 'google';
 
       // ----- API test -----
@@ -129,6 +141,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       // ----- AI Analysis (Summarize / Analyze / Keywords) -----
       if (message.type === 'AI_SUMMARIZE' || message.type === 'AI_ANALYZE' || message.type === 'AI_KEYWORDS') {
+        if (apiKeys.enableAiService === false) {
+          sendResponse({ success: false, error: 'AI service is disabled in settings' });
+          return;
+        }
+
         const response = await handleAiRequest(
           message.type,
           message.text,
@@ -137,6 +154,40 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           apiKeys.geminiModel
         );
         sendResponse(response);
+        return;
+      }
+
+      if (message.type === 'GENERATE_TTS') {
+        if (!apiKeys.geminiKey) {
+          sendResponse({ success: false, error: 'Gemini API key not configured' });
+          return;
+        }
+
+        if (apiKeys.enableGeminiTts === false) {
+          sendResponse({ success: false, error: 'Gemini TTS is disabled in settings' });
+          return;
+        }
+
+        const result = await GeminiAI.generateSpeech(
+          message.text,
+          apiKeys.geminiKey,
+          message.lang || 'en',
+          normalizeGeminiTtsVoice(apiKeys.geminiTtsVoice || DEFAULT_GEMINI_TTS_VOICE)
+        );
+
+        addApiLog({
+          type: 'GENERATE_TTS',
+          provider: 'gemini',
+          success: !!result,
+          targetLang: message.lang || 'en'
+        });
+
+        if (!result) {
+          sendResponse({ success: false, error: 'Gemini TTS failed' });
+          return;
+        }
+
+        sendResponse({ success: true, ...result });
         return;
       }
 

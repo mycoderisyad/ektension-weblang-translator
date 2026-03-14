@@ -28,12 +28,21 @@
   "options_page": "options/options.html",
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
       "js": ["content.js"]
     }
   ],
   "host_permissions": [
-    "https://*/*",
-    "http://*/*"
+    "https://translation.googleapis.com/*",
+    "https://translate.googleapis.com/*",
+    "https://clients5.google.com/*",
+    "https://translate.google.com/*",
+    "https://api.cognitive.microsofttranslator.com/*",
+    "https://api.mymemory.translated.net/*",
+    "https://libretranslate.de/*",
+    "https://generativelanguage.googleapis.com/*"
   ]
 }

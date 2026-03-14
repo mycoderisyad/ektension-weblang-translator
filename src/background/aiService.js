@@ -1,3 +1,9 @@
+import {
+  DEFAULT_GEMINI_TTS_VOICE,
+  GEMINI_TTS_MODEL,
+  normalizeGeminiTtsVoice
+} from '../common/geminiTts.js';
+
 // AI Service with Gemini for dynamic language analysis
 const GeminiAI = (() => {
   
@@ -113,8 +119,7 @@ const GeminiAI = (() => {
     return langMap[code] || 'English';
   };
 
-  async function makeRequest(prompt, key, model) {
-    const modelName = model || 'gemini-2.5-flash-lite';
+  async function makeJsonRequest(modelName, key, body) {
     try {
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
@@ -124,17 +129,7 @@ const GeminiAI = (() => {
             "Content-Type": "application/json",
             "X-goog-api-key": key
           },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: prompt,
-                  },
-                ],
-              },
-            ],
-          }),
+          body: JSON.stringify(body),
         }
       );
       
@@ -144,11 +139,47 @@ const GeminiAI = (() => {
       }
       
       const data = await res.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text;
+      return data;
     } catch (error) {
       console.error('Gemini AI request failed:', error);
       return null;
     }
+  }
+
+  async function makeRequest(prompt, key, model) {
+    const modelName = model || 'gemini-2.5-flash-lite';
+    const data = await makeJsonRequest(modelName, key, {
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+    });
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  }
+
+  function extractAudioPayload(data) {
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const audioPart = parts.find((part) => part.inlineData?.data);
+
+    if (!audioPart?.inlineData?.data) {
+      return null;
+    }
+
+    const mimeType = audioPart.inlineData.mimeType || 'audio/L16;rate=24000';
+    const rateMatch = mimeType.match(/rate=(\d+)/i);
+
+    return {
+      audioBase64: audioPart.inlineData.data,
+      mimeType,
+      sampleRate: rateMatch ? Number(rateMatch[1]) : 24000,
+      channelCount: 1,
+      bitsPerSample: 16
+    };
   }
 
   async function summarize(text, key, targetLang = 'id', model) {
@@ -168,8 +199,37 @@ const GeminiAI = (() => {
     const prompt = `From the following text, extract 10 most important keywords in ${langName} (only words/phrases, separated by commas):\n\n${text}`;
     return await makeRequest(prompt, key, model);
   }
+
+  async function generateSpeech(text, key, targetLang = 'en', voice = DEFAULT_GEMINI_TTS_VOICE) {
+    const langName = getLanguageName(targetLang);
+    const selectedVoice = normalizeGeminiTtsVoice(voice);
+    const prompt = `Read the following text exactly as written in ${langName}. Do not add, remove, or translate anything.\n\n${text}`;
+    const data = await makeJsonRequest(GEMINI_TTS_MODEL, key, {
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName: selectedVoice
+            }
+          }
+        }
+      }
+    });
+
+    return extractAudioPayload(data);
+  }
   
-  return { summarize, analyze, keywords };
+  return { summarize, analyze, keywords, generateSpeech };
 })();
 
 export { GeminiAI };

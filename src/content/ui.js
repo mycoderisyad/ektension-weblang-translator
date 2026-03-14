@@ -159,7 +159,7 @@ export const UI = (() => {
     setTimeout(() => { el.remove(); }, 3000);
   }
 
-  return { injectTranslation, replaceTextPreservingStructure, updateTranslationColor, showProgress, showNotification, getUserPreferences };
+  return { injectTranslation, replaceTextPreservingStructure, updateTranslationColor, showProgress, showNotification, getUserPreferences, getColorScheme };
 })();
 
 

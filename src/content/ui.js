@@ -2,13 +2,13 @@ export const UI = (() => {
   let progressElement = null;
 
   function getColorScheme(theme) {
-    // Brighten backgrounds to make highlight clearer while keeping dark theme
+    // Soft pastel colors to reduce eye strain
     const schemes = {
-      default: { color: '#f3f4f6', bg: '#1f2937', border: '#6b7280' },
-      red:     { color: '#fef2f2', bg: '#2b1212', border: '#ef4444' },
-      blue:    { color: '#eff6ff', bg: '#13233f', border: '#3b82f6' },
-      green:   { color: '#ecfdf5', bg: '#123027', border: '#10b981' },
-      yellow:  { color: '#fefce8', bg: '#2b230f', border: '#f59e0b' },
+      default: { color: '#2C3E50', bg: '#DCD7C9', border: '#BDB7AA' },
+      red:     { color: '#2C3E50', bg: '#BF9264', border: '#A67D55' },
+      blue:    { color: '#2C3E50', bg: '#AEC6CF', border: '#92A8B0' },
+      green:   { color: '#2C3E50', bg: '#A8BBA3', border: '#8A9A86' },
+      yellow:  { color: '#2C3E50', bg: '#F6EFBD', border: '#D0CA9F' },
     };
     return schemes[theme] || schemes.default;
   }
@@ -18,7 +18,7 @@ export const UI = (() => {
     // Inline style update with !important via CSS rule for stronger override
     const styleId = 'weblang-translation-color-override';
     let styleTag = document.getElementById(styleId);
-    const css = `.weblang-translation{color:${colorScheme.color} !important;background:${colorScheme.bg} !important;border-left:4px solid ${colorScheme.border} !important;box-shadow:0 1px 0 rgba(0,0,0,.25) inset, 0 1px 6px rgba(0,0,0,.15) !important;}`;
+    const css = `.weblang-translation{color:${colorScheme.color} !important;background:${colorScheme.bg} !important;border:2px dashed ${colorScheme.border} !important;border-radius:6px !important;box-shadow:0 2px 4px rgba(0,0,0,.05) !important;}`;
     if (!styleTag) {
       styleTag = document.createElement('style');
       styleTag.id = styleId;
@@ -56,7 +56,7 @@ export const UI = (() => {
       }
       const div = document.createElement('div');
       div.className = 'weblang-translation';
-      div.style.cssText = `margin:6px 0 10px 0;padding:8px 12px;color:${colorScheme.color};background:${colorScheme.bg};border-left:4px solid ${colorScheme.border};border-radius:6px;display:block;line-height:1.55;box-shadow:0 1px 0 rgba(0,0,0,.25) inset, 0 1px 6px rgba(0,0,0,.15);`;
+      div.style.cssText = `margin:6px 0 10px 0;padding:8px 12px;color:${colorScheme.color};background:${colorScheme.bg};border:2px dashed ${colorScheme.border};border-radius:8px;display:block;line-height:1.55;box-shadow:0 2px 4px rgba(0,0,0,.05);`;
       div.textContent = translation;
       try {
         const parent = element.parentNode || element.closest('p, div, section, article') || document.body;

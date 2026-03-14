@@ -40,11 +40,17 @@ export function initQuickTranslate() {
     }
   }
 
-  function createPopup(x, y, text) {
+  function createPopup(x, y, text, theme = 'default') {
     const { color, bg, border } = (function getScheme(c){
-      const s = { default:{ color:'#e5e7eb', bg:'#111827', border:'#4b5563' } };
+      const s = {
+        default: { color: '#2C3E50', bg: '#DCD7C9', border: '#BDB7AA' },
+        red:     { color: '#2C3E50', bg: '#BF9264', border: '#A67D55' },
+        blue:    { color: '#2C3E50', bg: '#AEC6CF', border: '#92A8B0' },
+        green:   { color: '#2C3E50', bg: '#A8BBA3', border: '#8A9A86' },
+        yellow:  { color: '#2C3E50', bg: '#F6EFBD', border: '#D0CA9F' },
+      };
       return s[c] || s.default;
-    })('default');
+    })(theme);
     
     const wrapper = document.createElement('div');
     wrapper.className = 'weblang-quick-popup';
@@ -70,7 +76,7 @@ export function initQuickTranslate() {
       min-width:280px !important;
       font-size:14px !important;
       line-height:1.6 !important;
-      border:1px solid ${border} !important;
+      border:2px dashed ${border} !important;
       backdrop-filter:blur(8px) !important;
       animation:fadeInUp 0.3s ease-out !important;
       overflow:hidden !important;
@@ -80,15 +86,21 @@ export function initQuickTranslate() {
     `;
     
     wrapper.innerHTML = `
-      <div class="weblang-quick-header" style="background:#1f2937;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid ${border};cursor:move;user-select:none">
-        <strong style="font-weight:600;color:#fff;font-size:13px">Translation</strong>
-        <button data-action="close" style="background:none;border:none;color:#999;cursor:pointer;padding:2px 6px;border-radius:4px;font-size:14px;line-height:1">Close</button>
+      <div class="weblang-quick-header" style="background:rgba(255,255,255,0.2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid ${border};cursor:move;user-select:none">
+        <strong style="font-weight:600;color:${color};font-size:13px">Translation</strong>
+        <button data-action="close" style="background:none;border:none;color:${color};opacity:0.6;cursor:pointer;padding:2px;border-radius:4px;display:flex;align-items:center;justify-content:center" title="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
       </div>
       <div style="padding:14px">
-        <div class="weblang-quick-content" style="white-space:pre-wrap;word-break:break-word;margin-bottom:12px;color:#e5e7eb;font-size:14px;line-height:1.5">${text}</div>
+        <div class="weblang-quick-content" style="white-space:pre-wrap;word-break:break-word;margin-bottom:12px;color:${color};font-size:14px;line-height:1.5">${text}</div>
         <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center">
-          <button data-action="speak" title="Text-to-Speech" style="background:none;color:#e5e7eb;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:16px;line-height:1">🔊</button>
-          <button data-action="copy" style="background:none;color:#e5e7eb;border:none;padding:0 6px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500">Copy</button>
+          <button data-action="speak" title="Text-to-Speech" style="background:none;color:${color};border:none;padding:4px;border-radius:4px;cursor:pointer;display:flex;align-items:center;opacity:0.8">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+          </button>
+          <button data-action="copy" title="Copy Text" style="background:none;color:${color};border:none;padding:4px;border-radius:4px;cursor:pointer;display:flex;align-items:center;opacity:0.8">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
         </div>
       </div>
     `;
@@ -236,7 +248,8 @@ export function initQuickTranslate() {
       }
 
       // Show popup with "Translating..." immediately
-      popupEl = createPopup(e.pageX, e.pageY, 'Translating...');
+      const theme = prefs?.translationColor || 'default';
+      popupEl = createPopup(e.pageX, e.pageY, 'Translating...', theme);
       document.body.appendChild(popupEl);
 
       // Make popup draggable

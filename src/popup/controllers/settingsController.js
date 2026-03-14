@@ -112,14 +112,14 @@ export function createSettingsController({ sendToContent, sendToBackground, ensu
     if (openOptionsBtn && mainView && settingsView) {
       openOptionsBtn.addEventListener('click', () => {
         mainView.style.display = 'none';
-        settingsView.style.display = 'block';
+        settingsView.style.display = '';
       });
     }
 
     if (backToMainBtn && mainView && settingsView) {
       backToMainBtn.addEventListener('click', () => {
         settingsView.style.display = 'none';
-        mainView.style.display = 'block';
+        mainView.style.display = '';
       });
     }
 

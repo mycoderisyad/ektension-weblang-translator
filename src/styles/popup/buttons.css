@@ -5,24 +5,24 @@
 
 .btn-primary, .btn-secondary, .btn-export, .btn-text {
   display: flex; align-items: center; gap: 7px; font-weight: 500; font-family: inherit; font-size: 12.4px;
-  border-radius: var(--btn-radius); border: 1px solid #555; cursor: pointer;
+  border-radius: var(--btn-radius); border: 1px solid var(--border); cursor: pointer;
   transition: background var(--transition), border-color var(--transition), color var(--transition);
   text-align: center; justify-content: center;
 }
-.btn-primary { background: var(--bg-dark); color: #fff; padding: var(--btn-padding); margin-top: 7px; margin-bottom: 2px; }
-.btn-primary:hover { background: #262626; border-color: #666; }
-.btn-primary:active { background: #171717; }
+.btn-primary { background: var(--bg-dark); color: var(--text-main); padding: var(--btn-padding); margin-top: 7px; margin-bottom: 2px; }
+.btn-primary:hover { background: var(--bg-darker); border-color: var(--text-secondary); }
+.btn-primary:active { background: var(--bg-dark); }
 .btn-primary.translating { background: #ef4444 !important; border-color: #dc2626 !important; animation: pulse 2s infinite; }
 .btn-primary.translating:hover { background: #dc2626 !important; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.8} }
 
-.btn-secondary { background: var(--highlight); color: var(--text-secondary); border: 1px solid #555; padding: 8px 10px; white-space: nowrap; }
-.btn-secondary:hover { background: #222; color: #fff; }
+.btn-secondary { background: var(--highlight); color: var(--text-secondary); border: 1px solid var(--border); padding: 8px 10px; white-space: nowrap; }
+.btn-secondary:hover { background: var(--border); color: var(--text-main); }
 
-.btn-export { background: #222; color: var(--text-secondary); border: 1px solid #555; padding: 6px 10px; font-size: 11.5px; gap: 5px; }
-.btn-export:hover { background: #292929; color: #fff; }
+.btn-export { background: var(--bg-dark); color: var(--text-secondary); border: 1px solid var(--border); padding: 6px 10px; font-size: 11.5px; gap: 5px; }
+.btn-export:hover { background: var(--border); color: var(--text-main); }
 
-.btn-text { background: none; color: #999; border: none; padding: 6px 8px; font-size: 11.5px; gap: 4px; }
-.btn-text:hover { background: #222; color: #fff; }
+.btn-text { background: none; color: var(--text-secondary); border: none; padding: 6px 8px; font-size: 11.5px; gap: 4px; }
+.btn-text:hover { background: var(--highlight); color: var(--text-main); }
 
 

@@ -16,11 +16,11 @@
   width: 28px; 
   height: 28px; 
   border-radius: 50%;
-  transition: transform 0.2s;
+  transition: opacity 0.2s;
 }
 
 .color-option:hover {
-  transform: scale(1.1);
+  opacity: 0.85;
 }
 
 .color-option input[type="radio"] { 
@@ -50,9 +50,9 @@
 .color-option input:checked ~ .green-color { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 8px rgba(76,175,80,0.6); }
 .color-option input:checked ~ .yellow-color { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 8px rgba(255,171,64,0.6); }
 
-/* Base Colors */
-.default-color { background: #666; }
-.red-color { background: #ef4444; }
-.blue-color { background: #3b82f6; }
-.green-color { background: #10b981; }
-.yellow-color { background: #f59e0b; }
+/* Base Colors*/
+.default-color { background: #DCD7C9; }
+.red-color { background: #BF9264; }
+.blue-color { background: #AEC6CF; }
+.green-color { background: #A8BBA3; }
+.yellow-color { background: #F6EFBD; }

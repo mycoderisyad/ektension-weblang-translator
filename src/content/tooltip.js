@@ -20,13 +20,13 @@ export const Tooltip = (() => {
         max-width: 480px;
         min-width: 120px;
         padding: 10px 14px;
-        background: #1e293b;
-        color: #e2e8f0;
-        border: 1px solid #475569;
+        background: var(--weblang-tooltip-bg, #DCD7C9);
+        color: var(--weblang-tooltip-color, #2C3E50);
+        border: 2px dashed var(--weblang-tooltip-border, #BDB7AA);
         border-radius: 8px;
         font-size: 13px;
         line-height: 1.55;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         pointer-events: none;
         opacity: 0;
         transform: translateY(4px);
@@ -38,24 +38,16 @@ export const Tooltip = (() => {
         opacity: 1;
         transform: translateY(0);
       }
-      .weblang-tooltip-label {
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #94a3b8;
-        margin-bottom: 4px;
-        font-weight: 600;
-      }
       .weblang-tooltip-text {
-        color: #f1f5f9;
+        color: inherit;
       }
       [data-weblang-tooltip] {
         cursor: help;
-        border-bottom: 1px dotted rgba(148, 163, 184, 0.3);
+        border-bottom: 2px dotted rgba(0, 0, 0, 0.2);
         transition: border-color 0.2s;
       }
       [data-weblang-tooltip]:hover {
-        border-bottom-color: rgba(148, 163, 184, 0.6);
+        border-bottom-color: rgba(0, 0, 0, 0.5);
       }
     `;
     document.head.appendChild(style);
@@ -113,6 +105,20 @@ export const Tooltip = (() => {
     
     const textEl = tooltipEl.querySelector('.weblang-tooltip-text');
     textEl.textContent = originalText;
+    
+    // Apply dynamic pastel theme based on the target element's colored container
+    const colorContainer = targetEl.closest('.weblang-translation') || targetEl;
+    const computedBg = window.getComputedStyle(colorContainer).backgroundColor;
+    let themeBg = '#DCD7C9'; let themeBorder = '#BDB7AA';
+    
+    // Simple heuristic to match the hover tooltip with the parent's pastel color
+    if (computedBg.includes('191, 146, 100') || colorContainer.style.background.includes('#BF9264')) { themeBg = '#BF9264'; themeBorder = '#A67D55'; } // Red
+    else if (computedBg.includes('174, 198, 207') || colorContainer.style.background.includes('#AEC6CF')) { themeBg = '#AEC6CF'; themeBorder = '#92A8B0'; } // Blue
+    else if (computedBg.includes('168, 187, 163') || colorContainer.style.background.includes('#A8BBA3')) { themeBg = '#A8BBA3'; themeBorder = '#8A9A86'; } // Green
+    else if (computedBg.includes('246, 239, 189') || colorContainer.style.background.includes('#F6EFBD')) { themeBg = '#F6EFBD'; themeBorder = '#D0CA9F'; } // Yellow
+
+    tooltipEl.style.setProperty('--weblang-tooltip-bg', themeBg);
+    tooltipEl.style.setProperty('--weblang-tooltip-border', themeBorder);
     
     // Show and position
     tooltipEl.classList.add('visible');

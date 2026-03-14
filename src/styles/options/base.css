@@ -1,4 +1,5 @@
 :root { --bg-dark:#0f1115; --bg-darker:#181b22; --card-bg:#181b22; --border:#2b2f3a; --text-main:#e6e8ee; --text-secondary:#aab1c4; --primary:#22c55e; --info:#3b82f6; --danger:#ef4444; --success:#10b981; --muted:#3a3f4b; --radius:12px; --shadow:0 8px 32px rgba(0,0,0,.35); --transition:.18s cubic-bezier(.3,.5,.5,1); --font-main:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+[data-theme="light"] { --bg-dark:#f8fafc; --bg-darker:#f1f5f9; --card-bg:#ffffff; --border:#cbd5e1; --text-main:#334155; --text-secondary:#64748b; --shadow:0 8px 32px rgba(0,0,0,.08); }
 html, body { background: var(--bg-dark); color: var(--text-main); font-family: var(--font-main); margin: 0; padding: 0; min-height: 100vh; }
 .options-wrap {
   width: min(1100px, 92vw);

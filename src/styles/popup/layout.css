@@ -9,8 +9,8 @@
 }
 .app-header {
   background: var(--bg-dark);
-  color: #fff;
-  padding: 14px 20px;
+  color: var(--text-main);
+  padding: 14px 16px; /* Adjusted padding to match card alignment */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -22,14 +22,26 @@
 
 .header-actions { display: flex; align-items: center; gap: 10px; }
 .icon-toggle-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.icon-toggle-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.icon-toggle-btn:hover { color: var(--text-main); background: rgba(128,128,128,0.15); }
 .mode-status { display: flex; align-items: center; gap: 7px; font-size: 11.5px; background: var(--highlight); color: var(--text-secondary); padding: 5px 10px; border-radius: 4px; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: inline-block; }
-.app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 8px; }
-.section { background: var(--bg-darker); border-bottom: 1px solid var(--border); padding: 18px 20px 14px 20px; }
-.section:last-of-type { border-bottom: none; }
-.section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 13px; font-weight: 600; font-size: 13.3px; color: var(--text-secondary); letter-spacing: .3px; }
-.section-icon { color: #888; stroke-width: 1.5; min-width: 15px; }
+.app-content { 
+  flex: 1; 
+  overflow-y: auto; 
+  overflow-x: hidden; 
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.section { 
+  background: var(--bg-dark); 
+  border: 1px solid var(--border); 
+  border-radius: 12px;
+  padding: 16px; 
+}
+.section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 13px; font-weight: 600; font-size: 13.3px; color: var(--text-main); letter-spacing: .3px; }
+.section-icon { color: var(--text-secondary); stroke-width: 1.5; min-width: 15px; }
 
 /* AI buttons row */
 .ai-buttons {

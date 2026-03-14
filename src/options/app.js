@@ -4,6 +4,7 @@ import { createApiSettingsController } from './controllers/apiSettings.js';
 import { createLanguageSettingsController } from './controllers/languageSettings.js';
 import { createDisplaySettingsController } from './controllers/displaySettings.js';
 import { populateLanguageSelect } from '../common/languages.js';
+import { initThemeController } from '../common/themeController.js';
 
 const DEFAULT_SETTINGS = {
   googleKey: '',
@@ -43,6 +44,7 @@ async function saveSettings(settings) {
 }
 
 export async function initializeOptionsPage() {
+  initThemeController();
   const message = createMessage(document.getElementById('savedMsg'));
   const form = document.getElementById('apiForm');
 

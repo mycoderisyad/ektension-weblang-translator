@@ -24,7 +24,15 @@ body,
   --transition: 0.14s;
   --radius: 8px;
   --btn-padding: 9px 14px;
-  --btn-radius: 6px;
+  --btn-radius: 8px;
+}
+[data-theme="light"] {
+  --bg-dark: #f8fafc;
+  --bg-darker: #f1f5f9;
+  --border: #cbd5e1;
+  --text-main: #334155;
+  --text-secondary: #64748b;
+  --highlight: #e2e8f0;
 }
 *, *::before, *::after { box-sizing: border-box; }
 body {
@@ -42,6 +50,6 @@ body {
   overflow-x: hidden;
 }
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
-::-webkit-scrollbar-track { background: #232323; border-radius: 2px; }
-*:focus { outline: 1px solid #555; outline-offset: 1px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-track { background: var(--bg-darker); border-radius: 2px; }
+*:focus { outline: 1px solid var(--text-secondary); outline-offset: 1px; }

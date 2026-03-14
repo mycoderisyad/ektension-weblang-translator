@@ -1,4 +1,4 @@
-// DOM Utilities - Simplified for new architecture
+// DOM Utilities
 export const DomUtils = (() => {
   let processedElements = new WeakSet();
 

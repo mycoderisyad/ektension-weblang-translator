@@ -2,7 +2,12 @@ name: Build & Release Extension
 
 on:
   push:
-  branches: ["main"]
+    branches: ["main"]
+    paths-ignore:
+      - "docs/**"
+      - "README.md"
+      - "AGENTS.md"
+      - ".gitignore"
 
 permissions:
   contents: write
@@ -15,46 +20,59 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Read version from manifest.json
-        id: version
-        run: echo "version=$(node -p "require('./manifest.json').version")" >> $GITHUB_OUTPUT
-
-      - name: Check if tag already exists
-        id: tag_check
+      - name: Setup Git
         run: |
-          if git tag --list "v${{ steps.version.outputs.version }}" | grep -q .; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Setup Node.js
-        if: steps.tag_check.outputs.exists == 'false'
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      - name: Auto-bump patch version
+        id: version
+        run: |
+          CURRENT=$(node -p "require('./manifest.json').version")
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          node -e "
+            const fs = require('fs');
+            const m = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+            m.version = '$NEW_VERSION';
+            fs.writeFileSync('manifest.json', JSON.stringify(m, null, 2) + '\n');
+          "
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Bumped version: $CURRENT → $NEW_VERSION"
+
       - name: Install dependencies
-        if: steps.tag_check.outputs.exists == 'false'
         run: npm ci
 
       - name: Build extension
-        if: steps.tag_check.outputs.exists == 'false'
         run: npm run build
 
       - name: Create ZIP
-        if: steps.tag_check.outputs.exists == 'false'
         run: |
           cd build
           zip -r ../weblang-translator-v${{ steps.version.outputs.version }}.zip .
 
+      - name: Commit & push version bump
+        id: push
+        run: |
+          git add manifest.json
+          git commit -m "chore: bump version to v${{ steps.version.outputs.version }} [skip ci]"
+          git push
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
       - name: Create release
-        if: steps.tag_check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: v${{ steps.version.outputs.version }}
           files: weblang-translator-v${{ steps.version.outputs.version }}.zip
+          target_commitish: ${{ steps.push.outputs.sha }}
           generate_release_notes: true
           make_latest: true

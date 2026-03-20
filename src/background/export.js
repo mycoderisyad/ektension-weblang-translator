@@ -1,11 +1,28 @@
+const ALLOWED_EXPORT_TYPES = new Set(['txt', 'pdf']);
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export const ExportUtils = (() => {
   async function doExport({ fileType, content, filename = 'weblang-export' }) {
+    if (!ALLOWED_EXPORT_TYPES.has(fileType)) {
+      throw new Error(`Unsupported export type: ${fileType}`);
+    }
+
     try {
       if (fileType === 'pdf') {
-        const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${filename}</title>
+        const safeFilename = escapeHtml(filename);
+        const safeContent = escapeHtml(content).replace(/\n/g, '<br>');
+        const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${safeFilename}</title>
 <style>@page{margin:2cm;size:A4}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;max-width:none;margin:0;padding:20px;background:white}.header{text-align:center;border-bottom:2px solid #2563eb;padding-bottom:15px;margin-bottom:30px}.header h1{color:#2563eb;margin:0 0 10px 0;font-size:28px;font-weight:600}.header .meta{color:#64748b;font-size:14px}.content{white-space:pre-wrap;word-wrap:break-word;font-size:14px;line-height:1.8}.footer{margin-top:40px;padding-top:20px;border-top:1px solid #e2e8f0;text-align:center;color:#64748b;font-size:12px}@media print{body{margin:0;padding:15px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none}.header h1{color:#2563eb!important}}</style></head><body>
 <div class="header"><h1>WebLang Export</h1><div class="meta">Generated on ${new Date().toLocaleString('id-ID',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div></div>
-<div class="content">${content.replace(/\n/g,'<br>')}</div>
+<div class="content">${safeContent}</div>
 <div class="footer"><p>Exported by WebLang Translator Chrome Extension</p></div>
 <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),800));window.addEventListener('afterprint',()=>setTimeout(()=>window.close(),1000));</script>
 </body></html>`;

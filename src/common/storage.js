@@ -22,7 +22,30 @@ export const StorageUtils = (() => {
     });
   }
 
-  return { get, set };
+  async function getLocal(keys) {
+    return new Promise((resolve) => {
+      try {
+        chrome.storage.local.get(keys, (data) => {
+          if (chrome.runtime.lastError) resolve({});
+          else resolve(data);
+        });
+      } catch {
+        resolve({});
+      }
+    });
+  }
+
+  async function setLocal(obj) {
+    return new Promise((resolve) => {
+      try {
+        chrome.storage.local.set(obj, () => resolve(!chrome.runtime.lastError));
+      } catch {
+        resolve(false);
+      }
+    });
+  }
+
+  return { get, set, getLocal, setLocal };
 })();
 
 

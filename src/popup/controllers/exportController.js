@@ -32,7 +32,7 @@ export function createExportController({ sendToContent, sendToBackground, setSta
   }
 
   async function exportAiResult(fileType) {
-    const data = await StorageUtils.get(['aiLastResult', 'aiLastType']);
+    const data = await StorageUtils.getLocal(['aiLastResult', 'aiLastType']);
     if (!data.aiLastResult) {
       setStatus('No AI result to export');
       setTimeout(() => setStatus(''), 2000);

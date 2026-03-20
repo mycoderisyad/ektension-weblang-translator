@@ -1,4 +1,4 @@
-﻿// Translation Engine â€” Upgraded with Batch API + sessionStorage Cache
+// Translation Engine â€” Upgraded with Batch API + sessionStorage Cache
 // Inspired by XTranslate's page-translator.ts architecture
 import { TextSelector } from './textSelector.js';
 import { UI } from './ui.js';
@@ -24,15 +24,21 @@ export const TranslationEngine = (() => {
   // --- Cache Functions (sessionStorage, like XTranslate's MD5 approach) ---
   
   function getCacheKey(text, from, to) {
-    // Simple hash instead of MD5 (no dependency needed)
-    let hash = 0;
+    // 53-bit hash using two independent 32-bit Murmur-style accumulators,
+    // greatly reducing the collision probability compared to a single 32-bit hash.
     const str = `${from}_${to}_${text}`;
+    let h1 = 0xdeadbeef;
+    let h2 = 0x41c6ce57;
     for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash |= 0;
+      const ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
     }
-    return `${CACHE_PREFIX}${Math.abs(hash).toString(36)}`;
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    const lo = h1 >>> 0;
+    const hi = (h2 >>> 0) & 0x1fffff;
+    return `${CACHE_PREFIX}${(hi * 4294967296 + lo).toString(36)}`;
   }
   
   function getCached(text, from, to) {

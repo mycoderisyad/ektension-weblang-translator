@@ -193,9 +193,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       // ----- CSS injection for AI popup -----
       if (message.type === 'INJECT_CONTENT_CSS') {
+        const ALLOWED_CSS_FILES = ['styles/content/aiPopup.css'];
         const tabId = sender?.tab?.id;
         if (!tabId || !message.file) {
           sendResponse({ success: false, error: 'Missing tabId or file' });
+          return;
+        }
+        if (!ALLOWED_CSS_FILES.includes(message.file)) {
+          sendResponse({ success: false, error: 'CSS file not permitted' });
           return;
         }
         try {

@@ -132,6 +132,13 @@ export const UI = (() => {
     }
   }
 
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
   function showProgress(current, total, message = 'Translating') {
     if (progressElement) progressElement.remove();
     if (current >= total) { progressElement?.remove(); progressElement = null; return; }
@@ -139,9 +146,11 @@ export const UI = (() => {
     progressElement.id = 'weblang-progress';
     progressElement.style.cssText = `position:fixed;top:20px;right:20px;background:#111827;color:#e5e7eb;padding:14px 20px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.5);z-index:2147483647;display:flex;gap:12px;`;
     const percentage = Math.round((current / total) * 100);
+    const safeMessage = escapeHtml(message);
+    const safeCount = `${Number(current)}/${Number(total)} (${percentage}%)`;
     progressElement.innerHTML = `
       <div style="width:24px;height:24px;border:3px solid #374151;border-top-color:#9ca3af;border-radius:50%;animation:spin 1s linear infinite"></div>
-      <div><div style="font-weight:600">${message}</div><div style="font-size:12px;opacity:.9">${current}/${total} (${percentage}%)</div></div>
+      <div><div style="font-weight:600">${safeMessage}</div><div style="font-size:12px;opacity:.9">${safeCount}</div></div>
       <div style="width:100px;height:4px;background:#1f2937;border-radius:2px;overflow:hidden"><div style="width:${percentage}%;height:100%;background:#9ca3af"></div></div>`;
     if (!document.getElementById('weblang-animations')) {
       const style = document.createElement('style');

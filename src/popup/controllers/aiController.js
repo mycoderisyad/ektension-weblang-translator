@@ -26,7 +26,7 @@ export function createAiController({ sendToContent, sendToBackground, setStatus 
       return;
     }
 
-    await StorageUtils.set({
+    await StorageUtils.setLocal({
       aiLastResult: response.result,
       aiLastType: aiType,
       aiLastTargetLang: targetLang,

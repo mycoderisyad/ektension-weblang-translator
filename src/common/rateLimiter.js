@@ -5,24 +5,22 @@ export const RateLimiter = (() => {
 
   /**
    * Returns true if the caller should be throttled.
-   * Resets the counter every 3 seconds.
-   * @param {number} [ms=25] - Minimum milliseconds between requests.
+   * Allows at most 100 requests per 10-second window with a minimum
+   * 50 ms gap between consecutive requests.
+   * @param {number} [ms=50] - Minimum milliseconds between requests.
    */
-  function isLimited(ms = 25) {
+  function isLimited(ms = 50) {
     const now = Date.now();
 
-    // Reset counter every 3 seconds
-    if (now - windowStart > 3000) {
+    if (now - windowStart > 10000) {
       requestCount = 0;
       windowStart = now;
     }
 
-    // Hard cap per window to prevent runaway requests
-    if (requestCount >= 500) {
+    if (requestCount >= 100) {
       return true;
     }
 
-    // Enforce minimum delay between consecutive requests
     if (now - lastRequestAt < ms) {
       return true;
     }

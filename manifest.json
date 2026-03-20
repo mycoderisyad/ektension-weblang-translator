@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "WebLang Translator",
   "description": "Translate any web page instantly with multi-provider support and AI-powered analysis.",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "author": "mycoderisyad",
   "icons": {
     "16": "assets/icon-16.png",
@@ -32,7 +32,9 @@
         "http://*/*",
         "https://*/*"
       ],
-      "js": ["content.js"]
+      "js": [
+        "content.js"
+      ]
     }
   ],
   "host_permissions": [
